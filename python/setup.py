@@ -43,7 +43,7 @@ setup(
                            include_dirs=[nm.get_include(), include_folder],
                            libraries=liblist,
                            library_dirs=[root_folder, GCCPATH],
-                           extra_link_args=['-lgomp'],
+                           # extra_link_args=['-lgomp'],
                            )],
     #data_files=[('bbn', ['../bbn/sBBN.dat'])]
 )
