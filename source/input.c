@@ -668,13 +668,28 @@ int input_read_parameters(
   class_call(parser_read_double(pfc,"omega_b",&param2,&flag2,errmsg),
              errmsg,
              errmsg);
-  class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
+  /* Read the baryon fraction eta_b,
+     added @nstarman */
+  class_call(parser_read_double(pfc,"eta_b",&param3,&flag3,errmsg),
              errmsg,
-             "In input file, you can only enter one of Omega_b or omega_b, choose one");
+             errmsg);
+  /* modified @nstarman
+     originally:
+     class_test(((flag1 == _TRUE_) && (flag2 == _TRUE_)),
+                errmsg ,
+                "In input file, you can only enter one of Omega_b or omega_b, choose one");
+  */
+  class_test(class_at_least_two_of_three(flag1,flag2,flag3),
+             errmsg,
+             "In input file, you can only enter one of eta_b, Omega_b or omega_b, choose one");
   if (flag1 == _TRUE_)
     pba->Omega0_b = param1;
   if (flag2 == _TRUE_)
     pba->Omega0_b = param2/pba->h/pba->h;
+  /* Set Omega_b in background structure. Formula hardcoded.
+     added @nstarman */
+  if (flag3 == _TRUE_)
+    pba->Omega0_b = 1.81e6*param3*pow(pba->T_cmb,3)/pow(pba->h,2);
 
   Omega_tot += pba->Omega0_b;
 
