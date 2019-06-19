@@ -1547,9 +1547,11 @@ cdef class Class:
 
         Parameters
         ----------
-        names : list
+        names : list, 'all'
                 Derived parameters that can be asked from Monte Python, or
                 elsewhere.
+                full list of possible derived parameters is inluded in _Info_
+                if 'all': gets all derived parameters
 
         Returns
         -------
@@ -1563,9 +1565,75 @@ cdef class Class:
             returns a TypeError. The old version of this function, when asked
             with the new argument, will raise an AttributeError.
 
+        Info
+        ----
+        full list of possible derived parameters:
+        background (ba):
+            'h', 'H0', 'Omega0_lambda' (or 'Omega_Lambda'), 'Omega0_fld',
+            'age', 'conformal_age', 'Neff', 'Omega_m', 'omega_m'
+            ** Not : 'm_ncdm_in_eV', 'm_ncdm_tot'
+        thermodynamics:
+            'tau_reio', 'z_reio', 'z_rec', 'tau_rec', 'rs_rec', 'rs_rec_h',
+            'ds_rec', 'ds_rec_h', 'ra_rec', 'ra_rec_h', 'da_rec', 'da_rec_h',
+            'z_d', 'tau_d', 'ds_d', 'ds_d_h', 'rs_d', 'rs_d_h', '100*theta_s',
+            'YHe', 'n_e',
+        primordial:
+            'A_s', 'ln10^{10}A_s', 'n_s', 'alpha_s', 'beta_s', 'r', 'r_0002',
+            'n_t', 'alpha_t', 'V_0', 'V_1', 'V_2', 'V_3', 'V_4', 'epsilon_V',
+            'eta_V', 'ksi_V^2', 'exp_m_2_tau_As', 'phi_min', 'phi_max',
+        spectra:
+            'alpha_kp', 'alpha_k1', 'alpha_k2', 'alpha_II_2_20',
+            'alpha_RI_2_20', 'alpha_RR_2_20', 'alpha_II_21_200',
+            'alpha_RI_21_200', 'alpha_RR_21_200', 'alpha_II_201_2500',
+            'alpha_RI_201_2500', 'alpha_RR_201_2500', 'alpha_II_2_2500',
+            'alpha_RI_2_2500', 'alpha_RR_2_2500', 'sigma8', 'sigma8_cb'
         """
-        if type(names) != type([]):
+        if not isinstance(names, (list, str)):
             raise TypeError("Deprecated")
+
+        if isinstance(names, str):
+            possible_names = ['all', 'background', 'ba', 'thermodynamics',
+                              'th', 'primordial', 'pm', 'spectral', 'sp']
+            if names not in possible_names:
+                raise ValueError("names not a supported string")
+
+            if names == 'all':
+                derived = {}
+                derived.update(self.get_current_derived_parameters('ba'))
+                derived.update(self.get_current_derived_parameters('th'))
+                derived.update(self.get_current_derived_parameters('pm'))
+                derived.update(self.get_current_derived_parameters('sp'))
+                return derived
+
+            elif names in ['background', 'ba']:
+                names = [
+                    'h', 'H0', 'Omega0_lambda', 'Omega_Lambda', 'Omega0_fld',
+                    'age', 'conformal_age', 'Neff', 'Omega_m', 'omega_m'
+                ]
+            elif names in ['thermodynamics', 'th']:
+                names = [
+                    'tau_reio', 'z_reio', 'z_rec', 'tau_rec', 'rs_rec',
+                    'rs_rec_h', 'ds_rec', 'ds_rec_h', 'ra_rec', 'ra_rec_h',
+                    'da_rec', 'da_rec_h', 'z_d', 'tau_d', 'ds_d', 'ds_d_h',
+                    'rs_d', 'rs_d_h', '100*theta_s', 'YHe', 'n_e'
+                ]
+            elif names in ['primordial', 'pm']:
+                names = [
+                    'A_s', 'ln10^{10}A_s', 'n_s', 'alpha_s', 'beta_s', 'r',
+                    'r_0002', 'n_t', 'alpha_t', 'V_0', 'V_1', 'V_2', 'V_3',
+                    'V_4', 'epsilon_V', 'eta_V', 'ksi_V^2', 'exp_m_2_tau_As',
+                    'phi_min', 'phi_max'
+                ]
+            elif names in ['spectra', 'sp']:
+                names = [
+                    'alpha_kp', 'alpha_k1', 'alpha_k2', 'alpha_II_2_20',
+                    'alpha_RI_2_20', 'alpha_RR_2_20', 'alpha_II_21_200',
+                    'alpha_RI_21_200', 'alpha_RR_21_200', 'alpha_II_201_2500',
+                    'alpha_RI_201_2500', 'alpha_RR_201_2500',
+                    'alpha_II_2_2500', 'alpha_RI_2_2500', 'alpha_RR_2_2500',
+                    'sigma8', 'sigma8_cb'
+                ]
+
 
         derived = {}
         for name in names:
