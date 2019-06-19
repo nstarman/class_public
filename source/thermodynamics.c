@@ -666,6 +666,15 @@ int thermodynamics_init(
 
   }
 
+  /*
+  Here is where I can modify the visibility function more drastically
+  1) do peak find the recombination peak
+  2) go out either a prespecified amount to either side or use some detection
+    when sinks to base level (derivative threshold?)
+  3) within the selection modify the visibility function according to the
+     added parameters
+  */
+
   /** - smooth the rate (details of smoothing unimportant: only the
       order of magnitude of the rate matters) */
   class_call(array_smooth(pth->thermodynamics_table,

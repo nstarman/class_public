@@ -3013,7 +3013,7 @@ int input_default_params(
 
   pth->YHe=_BBN_;
   pth->recombination=recfast;
-  pth->A_vis = 1.;
+  pth->A_vis = 1.;  /* added visibility function params  @nstarman */
   pth->reio_parametrization=reio_camb;
   pth->reio_z_or_tau=reio_z;
   pth->z_reio=11.357;
@@ -3022,7 +3022,6 @@ int input_default_params(
   pth->reionization_width=0.5;
   pth->helium_fullreio_redshift=3.5;
   pth->helium_fullreio_width=0.5;
-  // pth->A_vis = 1.;  /* added visibility function params  @nstarman */
 
   pth->binned_reio_num=0;
   pth->binned_reio_z=NULL;
