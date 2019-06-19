@@ -1162,6 +1162,10 @@ int input_read_parameters(
 
   }
 
+  /* visibility function test amplitude # TODO not permanent  @nstarman */
+  class_read_double("A_vis",pth->A_vis);
+
+
   /** - reionization parametrization */
   class_call(parser_read_string(pfc,"reio_parametrization",&string1,&flag1,errmsg),
              errmsg,
@@ -3009,6 +3013,7 @@ int input_default_params(
 
   pth->YHe=_BBN_;
   pth->recombination=recfast;
+  pth->A_vis = 1.;
   pth->reio_parametrization=reio_camb;
   pth->reio_z_or_tau=reio_z;
   pth->z_reio=11.357;
@@ -3017,6 +3022,7 @@ int input_default_params(
   pth->reionization_width=0.5;
   pth->helium_fullreio_redshift=3.5;
   pth->helium_fullreio_width=0.5;
+  // pth->A_vis = 1.;  /* added visibility function params  @nstarman */
 
   pth->binned_reio_num=0;
   pth->binned_reio_z=NULL;

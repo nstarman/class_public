@@ -314,6 +314,9 @@ int thermodynamics_init(
              pth->error_message,
              "Y_He=%g out of bounds (%g<Y_He<%g)",pth->YHe,_YHE_SMALL_,_YHE_BIG_);
 
+  /** visibility function @nstarman **/
+
+
   /** - check energy injection parameters */
 
   class_test((pth->annihilation<0),
@@ -621,7 +624,8 @@ int thermodynamics_init(
   for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
 
     /** - ---> compute g */
-    g = pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+    /** - modified @nstarman to include A_vis*/
+    g = pth->A_vis*pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
       exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
 
     /** - ---> compute exp(-kappa) */

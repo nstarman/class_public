@@ -67,6 +67,8 @@ struct thermo
 
   enum recombination_algorithm recombination; /**< recombination code */
 
+  double A_vis;  /**< visibility function amplitude @nstarman TODO temporary */
+
   enum reionization_parametrization reio_parametrization; /**< reionization scheme */
 
   enum reionization_z_or_tau reio_z_or_tau; /**< is the input parameter the reionization redshift or optical depth? */
@@ -285,6 +287,8 @@ struct recombination {
   double * recombination_table; /**< table recombination_table[index_z*preco->re_size+index_re] with all other quantities (array of size preco->rt_size*preco->re_size) */
 
   //@}
+
+  double A_vis; /**< @nstarman */
 
   /** @name - recfast parameters needing to be passed to
       thermodynamics_derivs_with_recfast() routine */
