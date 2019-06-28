@@ -634,6 +634,7 @@ int thermodynamics_init(
 
     /** - ---> compute g' (the plus sign of the second term is correct, see def of -kappa in thermodynamics module!) */
     pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg] =
+      A_vis*
       (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa] +
        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]) *
@@ -641,6 +642,7 @@ int thermodynamics_init(
 
     /** - ---> compute g''  */
     pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
+      A_vis*
       (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa] +
        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa] * 3. +
