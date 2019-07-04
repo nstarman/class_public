@@ -261,6 +261,7 @@ int thermodynamics_init(
 
   /* index running over time*/
   int index_tau;
+  int index_tau_rec_max; /* time index of rec_max @nstarman */
   /* temporary variables related to visibility function */
   double g;
   /* vector of background values for calling background_at_tau() */
@@ -624,8 +625,7 @@ int thermodynamics_init(
   for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
 
     /** - ---> compute g */
-    /** - modified @nstarman to include A_vis*/
-    g = pth->A_vis*pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+    g = pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
       exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
 
     /** - ---> compute exp(-kappa) */
@@ -634,7 +634,6 @@ int thermodynamics_init(
 
     /** - ---> compute g' (the plus sign of the second term is correct, see def of -kappa in thermodynamics module!) */
     pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg] =
-      pth->A_vis*
       (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa] +
        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]) *
@@ -642,7 +641,6 @@ int thermodynamics_init(
 
     /** - ---> compute g''  */
     pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
-      pth->A_vis*
       (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa] +
        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa] * 3. +
@@ -668,14 +666,79 @@ int thermodynamics_init(
 
   }
 
-  /*
-  Here is where I can modify the visibility function more drastically
-  1) do peak find the recombination peak
-  2) go out either a prespecified amount to either side or use some detection
-    when sinks to base level (derivative threshold?)
-  3) within the selection modify the visibility function according to the
-     added parameters
-  */
+ printf("NO AVIS");
+ //  /* START @nstarman approximations
+ //  Here is where I can modify the visibility function more drastically
+ //  1) do peak find the recombination peak
+ //  2) go out either a prespecified amount to either side or use some detection
+ //    when sinks to base level (derivative threshold?)
+ //  3) within the selection modify the visibility function according to the
+ //     added parameters
+ //  */
+ //
+ //  // get recombination maximum value
+ //  index_tau=pth->tt_size-1;
+ //  while (pth->z_table[index_tau]>_Z_REC_MAX_) {
+ //    index_tau--;
+ //  }
+ //
+ //  index_tau_rec_max=index_tau;
+ //
+ //  // testing found value
+ //  class_test(pth->thermodynamics_table[(index_tau+1)*pth->th_size+pth->index_th_g] >
+ //             pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g],
+ //             pth->error_message,
+ //             "found a recombination redshift greater or equal to the maximum value imposed in thermodynamics.h, z_rec_max=%g",_Z_REC_MAX_);
+ //
+ // // modifying
+ // for (index_tau=index_tau_rec_max; index_tau>=0; index_tau--) {
+ //
+ //   /** - ---> compute g */
+ //   /** - modified @nstarman to include A_vis*/
+ //   g = pth->A_vis*pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+ //     exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
+ //
+ //   /** - ---> compute exp(-kappa) */
+ //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_exp_m_kappa] =
+ //     exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
+ //
+ //   /** - ---> compute g' (the plus sign of the second term is correct, see def of -kappa in thermodynamics module!) */
+ //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg] =
+ //     pth->A_vis*
+ //     (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa] +
+ //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+ //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]) *
+ //     exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
+ //
+ //   /** - ---> compute g''  */
+ //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
+ //     pth->A_vis*
+ //     (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa] +
+ //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+ //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa] * 3. +
+ //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+ //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+ //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]) *
+ //     exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
+ //
+ //   /** - ---> store g */
+ //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
+ //
+ //   /** - ---> compute variation rate */
+ //   class_test(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] == 0.,
+ //              pth->error_message,
+ //              "variation rate diverges");
+ //
+ //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate] =
+ //     sqrt(pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
+ //          +pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa]/
+ //               pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
+ //          +fabs(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa]/
+ //                pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]));
+ //
+ // }
+ //
+ //  /*END @nstarman approximations*/
 
   /** - smooth the rate (details of smoothing unimportant: only the
       order of magnitude of the rate matters) */
@@ -702,16 +765,19 @@ int thermodynamics_init(
 
   /** - find maximum of g */
 
+  // index of Z_REC_MAX
   index_tau=pth->tt_size-1;
   while (pth->z_table[index_tau]>_Z_REC_MAX_) {
     index_tau--;
   }
 
+  // testing found value
   class_test(pth->thermodynamics_table[(index_tau+1)*pth->th_size+pth->index_th_g] >
              pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g],
              pth->error_message,
              "found a recombination redshift greater or equal to the maximum value imposed in thermodynamics.h, z_rec_max=%g",_Z_REC_MAX_);
 
+  // get to maximmum value
   while (pth->thermodynamics_table[(index_tau+1)*pth->th_size+pth->index_th_g] <
          pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]) {
     index_tau--;
