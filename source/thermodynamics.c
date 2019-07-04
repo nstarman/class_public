@@ -261,7 +261,6 @@ int thermodynamics_init(
 
   /* index running over time*/
   int index_tau;
-  int index_tau_rec_max; /* time index of rec_max @nstarman */
   /* temporary variables related to visibility function */
   double g;
   /* vector of background values for calling background_at_tau() */
@@ -291,6 +290,7 @@ int thermodynamics_init(
 
   preco=&reco;
   preio=&reio;
+
   class_alloc(pvecback,pba->bg_size*sizeof(double),pba->error_message);
 
   if (pth->thermodynamics_verbose > 0)
@@ -621,8 +621,102 @@ int thermodynamics_init(
 
   /** - --> compute visibility: \f$ g= (d \kappa/d \tau) e^{- \kappa} \f$ */
 
+  /* START @nstarman edits
+  Here is where I modify the visibility function more drastically
+  1) break up the calculation of the recombination and reionisation g
+        splitting when reionization starts (not recombination ends)
+        so as not to mess with any reionisation
+  2) edit the reco g from a g calculated in a temporary table
+  */
+
+  // Need to get g_max, so use a temporary table
   /* loop on z (decreasing z, increasing time) */
-  for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
+  // class_alloc(pth->temp_rec_table,pth->th_size*pth->tt_size*sizeof(double),pth->error_message);
+  // pth->temp_rec_table=pth->thermodynamics_table;  // TODO make sure deep copy
+  // memcpy(pth->temp_rec_table, pth->thermodynamics_table, sizeof(*pth->thermodynamics_table));
+
+  for (index_tau=pth->tt_size-1; index_tau>=preio->index_thermo_when_reio_start; index_tau--) {
+
+      /** - ---> compute g */
+      g = pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+        exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
+
+      /** - ---> compute exp(-kappa) */
+      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_exp_m_kappa] =
+        exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
+
+      /** - ---> compute g' (the plus sign of the second term is correct, see def of -kappa in thermodynamics module!) */
+      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg] =
+        (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa] +
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]) *
+        exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
+
+      /** - ---> compute g''  */
+      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
+        (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa] +
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa] * 3. +
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]) *
+        exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
+
+      /** - ---> store g */
+      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
+
+      /** - ---> compute variation rate */
+      class_test(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] == 0.,
+                 pth->error_message,
+                 "variation rate diverges");
+
+      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate] =
+        sqrt(pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
+             +pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa]/
+                  pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
+             +fabs(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa]/
+                   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]));
+
+  }
+
+  // Modifying Recombination
+  /* loop on z (decreasing z, increasing time) */
+  for (index_tau=pth->tt_size-1; index_tau>=preio->index_thermo_when_reio_start; index_tau--) {
+
+      /** - ---> compute g */
+      // g = pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+      //   exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
+      g = pth->A_vis*pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+
+      /** - ---> compute exp(-kappa) */
+      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_exp_m_kappa] =
+        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_exp_m_kappa];
+
+      /** - ---> compute g' (the plus sign of the second term is correct, see def of -kappa in thermodynamics module!) */
+      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg] =
+        pth->A_vis*
+        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg];
+
+      /** - ---> compute g''  */
+      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
+        pth->A_vis*
+        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg];
+
+      /** - ---> store g */
+      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
+
+      /** - ---> compute variation rate */
+      class_test(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] == 0.,
+                 pth->error_message,
+                 "variation rate diverges");
+
+      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate] =
+        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate];
+
+  }
+
+  // reionization
+  for (index_tau=preio->index_thermo_when_reio_start; index_tau>=0; index_tau--) {
 
     /** - ---> compute g */
     g = pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
@@ -666,79 +760,7 @@ int thermodynamics_init(
 
   }
 
- printf("NO AVIS");
- //  /* START @nstarman approximations
- //  Here is where I can modify the visibility function more drastically
- //  1) do peak find the recombination peak
- //  2) go out either a prespecified amount to either side or use some detection
- //    when sinks to base level (derivative threshold?)
- //  3) within the selection modify the visibility function according to the
- //     added parameters
- //  */
- //
- //  // get recombination maximum value
- //  index_tau=pth->tt_size-1;
- //  while (pth->z_table[index_tau]>_Z_REC_MAX_) {
- //    index_tau--;
- //  }
- //
- //  index_tau_rec_max=index_tau;
- //
- //  // testing found value
- //  class_test(pth->thermodynamics_table[(index_tau+1)*pth->th_size+pth->index_th_g] >
- //             pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g],
- //             pth->error_message,
- //             "found a recombination redshift greater or equal to the maximum value imposed in thermodynamics.h, z_rec_max=%g",_Z_REC_MAX_);
- //
- // // modifying
- // for (index_tau=index_tau_rec_max; index_tau>=0; index_tau--) {
- //
- //   /** - ---> compute g */
- //   /** - modified @nstarman to include A_vis*/
- //   g = pth->A_vis*pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
- //     exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
- //
- //   /** - ---> compute exp(-kappa) */
- //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_exp_m_kappa] =
- //     exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
- //
- //   /** - ---> compute g' (the plus sign of the second term is correct, see def of -kappa in thermodynamics module!) */
- //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg] =
- //     pth->A_vis*
- //     (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa] +
- //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
- //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]) *
- //     exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
- //
- //   /** - ---> compute g''  */
- //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
- //     pth->A_vis*
- //     (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa] +
- //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
- //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa] * 3. +
- //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
- //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
- //      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]) *
- //     exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
- //
- //   /** - ---> store g */
- //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
- //
- //   /** - ---> compute variation rate */
- //   class_test(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] == 0.,
- //              pth->error_message,
- //              "variation rate diverges");
- //
- //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate] =
- //     sqrt(pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
- //          +pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa]/
- //               pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
- //          +fabs(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa]/
- //                pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]));
- //
- // }
- //
- //  /*END @nstarman approximations*/
+  /*END @nstarman approximations*/
 
   /** - smooth the rate (details of smoothing unimportant: only the
       order of magnitude of the rate matters) */
@@ -2545,6 +2567,9 @@ int thermodynamics_reionization_sample(
   class_alloc(preio->reionization_table,preio->re_size*number_of_redshifts*sizeof(double),pth->error_message);
 
   preio->rt_size=number_of_redshifts;
+
+  // index in thermo table where reionization starts @nstarman
+  preio->index_thermo_when_reio_start=preio->rt_size - preio->index_reco_when_reio_start - 1;
 
   /** - (g) retrieve data stored in the growTable with gt_getPtr() */
   class_call(gt_getPtr(&gTable,(void**)&pData),

@@ -185,6 +185,7 @@ struct thermo
   int tt_size; /**< number of lines (redshift steps) in the tables */
   double * z_table; /**< vector z_table[index_z] with values of redshift (vector of size tt_size) */
   double * thermodynamics_table; /**< table thermodynamics_table[index_z*pth->tt_size+pba->index_th] with all other quantities (array of size th_size*tt_size) */
+  double * temp_rec_table; /**< table recombination_table[index_z*preco->re_size+index_re] with all other quantities (array of size preco->rt_size*preco->re_size) @nstarman */
 
   //@}
 
@@ -288,7 +289,9 @@ struct recombination {
 
   //@}
 
-  double A_vis; /**< @nstarman */
+  /**< @nstarman */
+  double A_vis;
+
 
   /** @name - recfast parameters needing to be passed to
       thermodynamics_derivs_with_recfast() routine */
@@ -434,6 +437,7 @@ struct reionization {
   //@{
 
   int index_reco_when_reio_start; /**< index of line in recombination table corresponding to first line of reionization table*/
+  int index_thermo_when_reio_start; /**< index of line in recombination table corresponding to first line of thermo table @nstarman */
 
   //@}
 
