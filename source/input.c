@@ -1163,7 +1163,7 @@ int input_read_parameters(
   }
 
   /* visibility function test amplitude # TODO not permanent  @nstarman */
-  class_read_double("A_vis",pth->A_vis);
+  class_read_double("alpha_vis",pth->alpha_vis);
 
 
   /** - reionization parametrization */
@@ -3013,7 +3013,7 @@ int input_default_params(
 
   pth->YHe=_BBN_;
   pth->recombination=recfast;
-  pth->A_vis = 1.;  /* added visibility function params  @nstarman */
+  pth->alpha_vis = 1.;  /* added visibility function params  @nstarman */
   pth->reio_parametrization=reio_camb;
   pth->reio_z_or_tau=reio_z;
   pth->z_reio=11.357;

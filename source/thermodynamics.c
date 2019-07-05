@@ -679,28 +679,54 @@ int thermodynamics_init(
 
   }
 
+  // get to maximmum value
+  index_tau=pth->tt_size-1;
+  while (pth->z_table[index_tau]>_Z_REC_MAX_) {
+    index_tau--;
+  }
+  while (pth->thermodynamics_table[(index_tau+1)*pth->th_size+pth->index_th_g] <
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]) {
+    index_tau--;
+  }
+  g_max=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+
   // Modifying Recombination
   /* loop on z (decreasing z, increasing time) */
   for (index_tau=pth->tt_size-1; index_tau>=preio->index_thermo_when_reio_start; index_tau--) {
 
       /** - ---> compute g */
-      // g = pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
-      //   exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
-      g = pth->A_vis*pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+      g=(g_max/pth->alpha_vis)*
+        pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]/g_max,
+            pow(pth->alpha_vis,-2.));
 
       /** - ---> compute exp(-kappa) */
-      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_exp_m_kappa] =
-        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_exp_m_kappa];
+      // pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_exp_m_kappa] =
+      //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_exp_m_kappa];
 
       /** - ---> compute g' (the plus sign of the second term is correct, see def of -kappa in thermodynamics module!) */
       pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg] =
-        pth->A_vis*
+        pow(pth->alpha_vis,-3.)*
+        pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]/g_max,
+            pow(pth->alpha_vis,-2.)-1.)*
         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg];
 
-      /** - ---> compute g''  */
+      /** - ---> compute g''  */  // FIXME TODO
       pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
-        pth->A_vis*
-        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg];
+        pow(pth->alpha_vis,-3.)*(
+            // f'^2
+            (((pow(pth->alpha_vis,-2.)-1.)/g_max)*
+             pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]/g_max,
+                 pow(pth->alpha_vis,-2.)-2.)*
+             pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg],2.)
+            ) +
+            // f''
+            (pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]/g_max,
+                 pow(pth->alpha_vis,-2.)-1.)*
+             pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg]
+            )
+        );
+      // pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
+      //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg];
 
       /** - ---> store g */
       pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
@@ -710,8 +736,8 @@ int thermodynamics_init(
                  pth->error_message,
                  "variation rate diverges");
 
-      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate] =
-        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate];
+      // pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate] =
+      //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate];
 
   }
 
@@ -752,7 +778,7 @@ int thermodynamics_init(
                "variation rate diverges");
 
     pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate] =
-      sqrt(pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
+      sqrt( pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
            +pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa]/
                 pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
            +fabs(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa]/
@@ -805,8 +831,8 @@ int thermodynamics_init(
     index_tau--;
   }
 
-  g_max = pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
-  index_tau_max = index_tau;
+  g_max=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+  index_tau_max=index_tau;
 
   /* approximation for maximum of g, using cubic interpolation, assuming equally spaced z's */
   pth->z_rec=pth->z_table[index_tau+1]+0.5*(pth->z_table[index_tau+1]-pth->z_table[index_tau])*(pth->thermodynamics_table[(index_tau)*pth->th_size+pth->index_th_g]-pth->thermodynamics_table[(index_tau+2)*pth->th_size+pth->index_th_g])/(pth->thermodynamics_table[(index_tau)*pth->th_size+pth->index_th_g]-2.*pth->thermodynamics_table[(index_tau+1)*pth->th_size+pth->index_th_g]+pth->thermodynamics_table[(index_tau+2)*pth->th_size+pth->index_th_g]);

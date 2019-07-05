@@ -67,7 +67,7 @@ struct thermo
 
   enum recombination_algorithm recombination; /**< recombination code */
 
-  double A_vis;  /**< visibility function amplitude @nstarman TODO temporary */
+  double alpha_vis;  /**< visibility function amplitude @nstarman TODO temporary */
 
   enum reionization_parametrization reio_parametrization; /**< reionization scheme */
 
@@ -185,7 +185,7 @@ struct thermo
   int tt_size; /**< number of lines (redshift steps) in the tables */
   double * z_table; /**< vector z_table[index_z] with values of redshift (vector of size tt_size) */
   double * thermodynamics_table; /**< table thermodynamics_table[index_z*pth->tt_size+pba->index_th] with all other quantities (array of size th_size*tt_size) */
-  double * temp_rec_table; /**< table recombination_table[index_z*preco->re_size+index_re] with all other quantities (array of size preco->rt_size*preco->re_size) @nstarman */
+  // double * temp_rec_table; /**< table recombination_table[index_z*preco->re_size+index_re] with all other quantities (array of size preco->rt_size*preco->re_size) @nstarman */
 
   //@}
 
@@ -290,7 +290,7 @@ struct recombination {
   //@}
 
   /**< @nstarman */
-  double A_vis;
+  double alpha_vis;
 
 
   /** @name - recfast parameters needing to be passed to
