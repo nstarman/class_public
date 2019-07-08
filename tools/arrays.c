@@ -277,6 +277,34 @@ int array_integrate_spline_table_line_to_line(
   return _SUCCESS_;
 }
 
+int array_integrate_kappa(double * x_array,
+					      int n_lines,
+					      double * array,
+					      int n_columns,
+					      int index_y,
+					      int index_ddy,
+					      int index_inty,
+					      ErrorMsg errmsg) {
+
+  int i;
+
+  double h;
+
+  *(array+0*n_columns+index_inty)  = 0.;
+
+  for (i=0; i < n_lines-1; i++) {
+
+    h = (x_array[i+1]-x_array[i]);
+
+    *(array+(i+1)*n_columns+index_inty) = *(array+i*n_columns+index_inty) +
+      (array[i*n_columns+index_y]+array[(i+1)*n_columns+index_y])*h/2.+
+      (array[i*n_columns+index_ddy]+array[(i+1)*n_columns+index_ddy])*h*h*h/24.;
+
+  }
+
+  return _SUCCESS_;
+}
+
 
  /**
  * Not called.
