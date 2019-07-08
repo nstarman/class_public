@@ -626,14 +626,9 @@ int thermodynamics_init(
   1) break up the calculation of the recombination and reionisation g
         splitting when reionization starts (not recombination ends)
         so as not to mess with any reionisation
-  2) edit the reco g from a g calculated in a temporary table
+  2) edit the reco g
+  3) compute the reio g
   */
-
-  // Need to get g_max, so use a temporary table
-  /* loop on z (decreasing z, increasing time) */
-  // class_alloc(pth->temp_rec_table,pth->th_size*pth->tt_size*sizeof(double),pth->error_message);
-  // pth->temp_rec_table=pth->thermodynamics_table;  // TODO make sure deep copy
-  // memcpy(pth->temp_rec_table, pth->thermodynamics_table, sizeof(*pth->thermodynamics_table));
 
   for (index_tau=pth->tt_size-1; index_tau>=preio->index_thermo_when_reio_start; index_tau--) {
 
@@ -679,7 +674,7 @@ int thermodynamics_init(
 
   }
 
-  // get to maximmum value
+  // get maximum value
   index_tau=pth->tt_size-1;
   while (pth->z_table[index_tau]>_Z_REC_MAX_) {
     index_tau--;
@@ -699,34 +694,39 @@ int thermodynamics_init(
         pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]/g_max,
             pow(pth->alpha_vis,-2.));
 
-      /** - ---> compute exp(-kappa) */
-      // pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_exp_m_kappa] =
-      //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_exp_m_kappa];
+      // NOTE: NOT DOING EXP(-KAPPA)
 
       /** - ---> compute g' (the plus sign of the second term is correct, see def of -kappa in thermodynamics module!) */
-      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg] =
-        pow(pth->alpha_vis,-3.)*
-        pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]/g_max,
-            pow(pth->alpha_vis,-2.)-1.)*
-        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg];
+      if (g <= 1e-5) {  // TODO better? right now doing nothing
 
-      /** - ---> compute g''  */  // FIXME TODO
-      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
-        pow(pth->alpha_vis,-3.)*(
-            // f'^2
-            (((pow(pth->alpha_vis,-2.)-1.)/g_max)*
-             pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]/g_max,
-                 pow(pth->alpha_vis,-2.)-2.)*
-             pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg],2.)
-            ) +
-            // f''
-            (pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]/g_max,
-                 pow(pth->alpha_vis,-2.)-1.)*
-             pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg]
-            )
-        );
-      // pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
-      //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg];
+          /** - ---> compute g' (the plus sign of the second term is correct, see def of -kappa in thermodynamics module!) */
+          // pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg] = 0.;
+
+          /** - ---> compute g''  */  // TODO
+          // pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg]
+      }
+      else {
+          pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg] =
+            pow(pth->alpha_vis,-3.)*
+            pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]/g_max,
+                1/pow(pth->alpha_vis,2.)-1.)*
+            pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg];
+
+           /** - ---> compute g''  */  // TODO
+           pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
+             pow(pth->alpha_vis,-3.)*(
+                  // f'^2
+                  (((pow(pth->alpha_vis,-2.)-1.)/g_max)*
+                   pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]/g_max,
+                       pow(pth->alpha_vis,-2.)-2.)*
+                   pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg],2.)
+                  ) +
+                  // f''
+                  (pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]/g_max,
+                       pow(pth->alpha_vis,-2.)-1.)*
+                   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg])
+              );
+      }
 
       /** - ---> store g */
       pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
@@ -736,10 +736,8 @@ int thermodynamics_init(
                  pth->error_message,
                  "variation rate diverges");
 
-      // pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate] =
-      //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate];
-
   }
+
 
   // reionization
   for (index_tau=preio->index_thermo_when_reio_start; index_tau>=0; index_tau--) {
