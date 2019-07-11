@@ -17,6 +17,12 @@ enum recombination_algorithm {
   hyrec
 };
 
+enum visibility_function_parametrization {
+  visfunc_none,     /**< no parameterization */
+  visfunc_gaussian,  /**< param as gaussian */
+  visfunc_skewnormal  /**< param as skewnormal */
+};
+
 /**
  * List of possible reionization schemes.
  */
@@ -67,7 +73,9 @@ struct thermo
 
   enum recombination_algorithm recombination; /**< recombination code */
 
-  double alpha_vis;  /**< visibility function amplitude @nstarman TODO temporary */
+  enum visibility_function_parametrization visfunc;  /**< visibility function parameterization @nstarman*/
+
+  double alpha_vis;  /**< visibility function width @nstarman*/
 
   enum reionization_parametrization reio_parametrization; /**< reionization scheme */
 
@@ -185,7 +193,6 @@ struct thermo
   int tt_size; /**< number of lines (redshift steps) in the tables */
   double * z_table; /**< vector z_table[index_z] with values of redshift (vector of size tt_size) */
   double * thermodynamics_table; /**< table thermodynamics_table[index_z*pth->tt_size+pba->index_th] with all other quantities (array of size th_size*tt_size) */
-  // double * temp_rec_table; /**< table recombination_table[index_z*preco->re_size+index_re] with all other quantities (array of size preco->rt_size*preco->re_size) @nstarman */
 
   //@}
 
@@ -276,6 +283,8 @@ struct recombination {
   int index_re_Tb;         /**< baryon temperature \f$ T_b \f$ */
   int index_re_cb2;        /**< squared baryon sound speed \f$ c_b^2 \f$ */
   int index_re_dkappadtau; /**< Thomson scattering rate \f$ d \kappa / d \tau \f$ (units 1/Mpc) */
+  int index_re_dddkappadtau; /**< 2nd derivative of Thomson scattering rate @nstarman */
+  int index_re_g;          /**< visibility function @nstarman */
   int re_size;             /**< size of this vector */
 
   //@}
@@ -290,7 +299,7 @@ struct recombination {
   //@}
 
   /**< @nstarman */
-  double alpha_vis;
+  // double alpha_vis;
 
 
   /** @name - recfast parameters needing to be passed to
@@ -555,6 +564,7 @@ extern "C" {
 				   struct background * pba,
 				   struct thermo * pth,
 				   struct recombination * prec,
+                   struct reionization * preio,  // added @nstarman
 				   double * pvecback
 				   );
 

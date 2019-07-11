@@ -237,7 +237,7 @@ int input_init(
   int input_verbose = 0, int1, aux_flag, shooting_failed=_FALSE_;
 
   class_read_int("input_verbose",input_verbose);
-  if (input_verbose >0) printf("Reading input parameters\n");
+  if (input_verbose >0) printf("\n\nReading input parameters\n");
 
   /** - Do we need to fix unknown parameters? */
   unknown_parameters_size = 0;
@@ -1162,7 +1162,36 @@ int input_read_parameters(
 
   }
 
-  /* visibility function test amplitude # TODO not permanent  @nstarman */
+  // visfunc options
+  class_call(parser_read_string(pfc,"visfunc",&string1,&flag1,errmsg),
+             errmsg,
+             errmsg);
+  printf("TEST flag1: %p\n", flag1);
+  printf("TEST visfunc: %s\n", string1);
+  if (flag1 == _TRUE_) {
+      flag2=_FALSE_;
+      if ((strstr(string1,"gaussian") != NULL) || (strstr(string1,"Gaussian") != NULL) || (strstr(string1,"normal") != NULL) || (strstr(string1,"Normal") != NULL)) {
+          printf("TEST making gaussian visibility function\n");
+          pth->visfunc=visfunc_gaussian;
+          flag2=_TRUE_;
+      }
+      else if ((strstr(string1,"skew-normal") != NULL)) {  // TODO more options
+          pth->visfunc=visfunc_skewnormal;
+          flag2=_TRUE_;
+      }
+      else if ((strstr(string1,"none") != NULL) || (strstr(string1,"None") != NULL)) {
+          pth->visfunc=visfunc_none;
+          flag2=_TRUE_;
+      }
+
+      class_test(flag2==_FALSE_,
+                 errmsg,
+                 "visfunc must be in: (none, None), (gaussian, Gaussian, normal, Normal), (skewnormal)");
+
+      printf("TEST pth->visfunc: %p\n", pth->visfunc);
+  }
+
+  /* visibility function gaussian width  @nstarman */
   class_read_double("alpha_vis",pth->alpha_vis);
 
 
@@ -3013,7 +3042,8 @@ int input_default_params(
 
   pth->YHe=_BBN_;
   pth->recombination=recfast;
-  pth->alpha_vis = 1.;  /* added visibility function params  @nstarman */
+  pth->visfunc=visfunc_none; /* added visibility function params  @nstarman */
+  pth->alpha_vis = 1.;  /* visfunc width  @nstarman */
   pth->reio_parametrization=reio_camb;
   pth->reio_z_or_tau=reio_z;
   pth->z_reio=11.357;
