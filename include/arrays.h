@@ -192,6 +192,25 @@ int array_integrate_all_trapzd_or_spline(
 						int index_inty,
 						ErrorMsg errmsg);
 
+  int array_integrate_g_simple(
+                      double * x_array,
+                      int n_lines,
+                      double * array,
+                      int n_columns,
+                      int index_y,
+                      int index_inty,
+                      ErrorMsg errmsg);
+
+  int array_integrate_g(
+                      double * x_array,
+                      int n_lines,
+                      double * array,
+                      int n_columns,
+                      int index_y,
+                      int index_ddy,
+                      int index_inty,
+                      ErrorMsg errmsg);
+
   int array_integrate(
 		      double * array,
 		      int n_columns,
