@@ -1173,13 +1173,20 @@ int input_read_parameters(
           flag2=_TRUE_;
       }
       else if ((strstr(string1,"gaussian") != NULL) || (strstr(string1,"normal") != NULL)) {
-          printf("using Gaussian parameterization of the visibility function, using alpha_vis parameter.\n");
+          if (input_verbose > 0) {
+            printf("using Gaussian parameterization of the visibility function, using alpha_vis parameter.\n");
+          }
           pth->visfunc=visfunc_gaussian;
+          class_read_double("alpha_vis",pth->alpha_vis); /* visibility function gaussian width  @nstarman */
           flag2=_TRUE_;
       }
       else if ((strstr(string1,"skew-gaussian") != NULL) || (strstr(string1,"skew-normal") != NULL)) {
-          printf("using skew-normal parameterization of the visibility function, using alpha_vis, beta_vis parameters.\n");
+          if (input_verbose > 0) {
+              printf("using skew-normal parameterization of the visibility function, using alpha_vis, beta_vis parameters.\n");
+            }
           pth->visfunc=visfunc_skewnormal;
+          class_read_double("alpha_vis",pth->alpha_vis); /* visibility function gaussian width  @nstarman */
+          //FIXME TODO // class_read_double("beta_vis",pth->beta_vis); /* visibility function skewness  @nstarman */
           flag2=_TRUE_;
       }
 
@@ -1188,11 +1195,17 @@ int input_read_parameters(
                  "visfunc must be in: (none, None), (gaussian, normal), (skew-gaussian, skew-normal)");
   }
   else {
-      printf("visfunc argument not provided, not using any visfunc parameters.");
-  }
+      class_call(parser_read_double(pth,"alpha_vis",&param1,&flag1,errmsg),
+                 errmsg,
+                 errmsg);
+      class_call(parser_read_double(pth,"beta_vis",&param2,&flag2,errmsg),
+                 errmsg,
+                 errmsg);
 
-  /* visibility function gaussian width  @nstarman */
-  class_read_double("alpha_vis",pth->alpha_vis);
+      class_test((flag1 == _TRUE_) || (flag2 == _TRUE_)),
+                 errmsg,
+                 "visfunc argument not provided, cannot specify any visfunc parameters.");
+  }
 
 
   /** - reionization parametrization */
