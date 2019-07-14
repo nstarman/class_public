@@ -1163,7 +1163,7 @@ int input_read_parameters(
   }
 
   // visfunc options
-  class_call(parser_read_string(pth,"visfunc",&string1,&flag1,errmsg),
+  class_call(parser_read_string(pfc,"visfunc",&string1,&flag1,errmsg),
              errmsg,
              errmsg);
   if (flag1 == _TRUE_) {
@@ -1195,10 +1195,10 @@ int input_read_parameters(
                  "visfunc must be in: (none, None), (gaussian, normal), (skew-gaussian, skew-normal)");
   }
   else {
-      class_call(parser_read_double(pth,"alpha_vis",&param1,&flag1,errmsg),
+      class_call(parser_read_double(pfc,"alpha_vis",&param1,&flag1,errmsg),
                  errmsg,
                  errmsg);
-      // class_call(parser_read_double(pth,"beta_vis",&param2,&flag2,errmsg),
+      // class_call(parser_read_double(pfc,"beta_vis",&param2,&flag2,errmsg),
       //            errmsg,
       //            errmsg);
 
