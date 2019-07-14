@@ -1166,29 +1166,29 @@ int input_read_parameters(
   class_call(parser_read_string(pfc,"visfunc",&string1,&flag1,errmsg),
              errmsg,
              errmsg);
-  printf("TEST flag1: %p\n", flag1);
-  printf("TEST visfunc: %s\n", string1);
   if (flag1 == _TRUE_) {
       flag2=_FALSE_;
-      if ((strstr(string1,"gaussian") != NULL) || (strstr(string1,"Gaussian") != NULL) || (strstr(string1,"normal") != NULL) || (strstr(string1,"Normal") != NULL)) {
-          printf("TEST making gaussian visibility function\n");
+      if ((strstr(string1,"none") != NULL) || (strstr(string1,"None") != NULL)) {
+          pth->visfunc=visfunc_none;
+          flag2=_TRUE_;
+      }
+      else if ((strstr(string1,"gaussian") != NULL) || (strstr(string1,"normal") != NULL)) {
+          printf("using Gaussian parameterization of the visibility function, using alpha_vis parameter.\n");
           pth->visfunc=visfunc_gaussian;
           flag2=_TRUE_;
       }
-      else if ((strstr(string1,"skew-normal") != NULL)) {  // TODO more options
+      else if ((strstr(string1,"skew-gaussian") != NULL) || (strstr(string1,"skew-normal") != NULL)) {
+          printf("using skew-normal parameterization of the visibility function, using alpha_vis, beta_vis parameters.\n");
           pth->visfunc=visfunc_skewnormal;
-          flag2=_TRUE_;
-      }
-      else if ((strstr(string1,"none") != NULL) || (strstr(string1,"None") != NULL)) {
-          pth->visfunc=visfunc_none;
           flag2=_TRUE_;
       }
 
       class_test(flag2==_FALSE_,
                  errmsg,
-                 "visfunc must be in: (none, None), (gaussian, Gaussian, normal, Normal), (skewnormal)");
-
-      printf("TEST pth->visfunc: %p\n", pth->visfunc);
+                 "visfunc must be in: (none, None), (gaussian, normal), (skew-gaussian, skew-normal)");
+  }
+  else {
+      printf("visfunc argument not provided, not using any visfunc parameters.");
   }
 
   /* visibility function gaussian width  @nstarman */

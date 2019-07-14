@@ -808,15 +808,11 @@ int thermodynamics_init(
   pth->ds_d=pth->rs_d*pba->a_today/(1.+pth->z_d);
 
   /** - find time above which visibility falls below a given fraction of its maximum */
-  printf("NEGLECT %f\n", ppr->neglect_CMB_sources_below_visibility);
-
   index_tau=index_tau_max;
   while ((pth->thermodynamics_table[(index_tau)*pth->th_size+pth->index_th_g] >
           g_max * ppr->neglect_CMB_sources_below_visibility)
          && (index_tau > 0))
     index_tau--;
-  // printf("neglect %f\n", g_max * ppr->neglect_CMB_sources_below_visibility);
-  // printf("neglect %d\n", index_tau);
 
   class_call(background_tau_of_z(pba,pth->z_table[index_tau],&(pth->tau_cut)),
              pba->error_message,
@@ -2661,8 +2657,8 @@ int thermodynamics_recombination(
   }
 
   /** - Now modifying kappa based off modification to g @nstarman */
+  // first check if even need to modify
   if (pth->visfunc==visfunc_none) {
-      printf("TEST visfunc_none\n");
       return _SUCCESS_;
   }
 
