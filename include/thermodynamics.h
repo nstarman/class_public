@@ -18,8 +18,8 @@ enum recombination_algorithm {
 };
 
 enum visibility_function_parametrization {
-  visfunc_none,     /**< no parameterization */
-  visfunc_gaussian,  /**< param as gaussian */
+  visfunc_none,       /**< no parameterization */
+  visfunc_gaussian,   /**< param as gaussian   */
   visfunc_skewnormal  /**< param as skewnormal */
 };
 
@@ -74,8 +74,9 @@ struct thermo
   enum recombination_algorithm recombination; /**< recombination code */
 
   enum visibility_function_parametrization visfunc;  /**< visibility function parameterization @nstarman*/
-
   double alpha_vis;  /**< visibility function width @nstarman*/
+  double beta_vis;  /**< visibility function skewness @nstarman*/
+  int tau_vis_size; /*  */
 
   enum reionization_parametrization reio_parametrization; /**< reionization scheme */
 
@@ -298,10 +299,6 @@ struct recombination {
 
   //@}
 
-  /**< @nstarman */
-  // double alpha_vis;
-
-
   /** @name - recfast parameters needing to be passed to
       thermodynamics_derivs_with_recfast() routine */
 
@@ -364,6 +361,16 @@ struct recombination {
   //@}
 
 };
+
+int visibility_gaussian(struct thermo * pth,
+                        double g_max,
+                        ErrorMsg errmsg);
+int visibility_skew_normal(double * tau_table,
+                           struct thermo * pth,
+                           int index_cdf,
+                           int index_eta_star,
+                           ErrorMsg errmsg);
+
 
 /**
  * Temporary structure where all the reionization history is defined and stored.
@@ -567,6 +574,15 @@ extern "C" {
                    struct reionization * preio,  // added @nstarman
 				   double * pvecback
 				   );
+
+  /* --------------- STAR added @nstarman ------------------*/
+  int ew_normal(double * tau_table,
+                             struct thermo * pth,
+                             int index_cdf,
+                             int index_eta_star,
+                             ErrorMsg errmsg);
+
+  /* --------------- END added @nstarman ------------------*/
 
   int thermodynamics_recombination_with_hyrec(
 						struct precision * ppr,

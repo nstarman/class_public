@@ -454,7 +454,7 @@ int thermodynamics_init(
 
     pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa] =
       -1./R*pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa];
-      -1./R*pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa];
+      // -1./R*pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa];
 
   }
 
@@ -470,6 +470,10 @@ int thermodynamics_init(
                                              pth->error_message),
              pth->error_message,
              pth->error_message);
+  // LIST
+  for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
+      printf("%f, ", pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa]);
+  }
 
   /** - --> compute tau_d = [int_{tau_today}^{tau} dtau -dkappa_d/dtau] */
   class_call(array_integrate_spline_table_line_to_line(tau_table,
@@ -632,6 +636,8 @@ int thermodynamics_init(
 
   /** - --> compute visibility: \f$ g= (d \kappa/d \tau) e^{- \kappa} \f$ */
   /* loop on z (decreasing z, increasing time) */
+  printf("dkappa/dtau, -kappa, g, dg/dtau, \n");
+
   for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
   // for (index_tau=preio->index_thermo_when_reio_start; index_tau>=0; index_tau--) {
 
@@ -678,7 +684,19 @@ int thermodynamics_init(
            +fabs(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa]/
                  pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]));
 
+  // Printing
+  printf("(%f, %f, %f, %f, %f), ",
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa],
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g],
+         g,
+         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg]
+         );
+
   }
+
+
+
 
   /** - smooth the rate (details of smoothing unimportant: only the
       order of magnitude of the rate matters) */
@@ -2634,6 +2652,7 @@ int thermodynamics_recombination(
   /* temporary variables related to visibility function */
   double g;
   double g_max;
+  int index_tau_max;
   double int_g_tot;
   /* temporary variables related to reionisation */
   enum reionization_parametrization reio_param;
@@ -2750,41 +2769,40 @@ int thermodynamics_recombination(
              pth->error_message,
              "found a recombination redshift greater or equal to the maximum value imposed in thermodynamics.h, z_rec_max=%g",_Z_REC_MAX_);
 
-  // get to maximmum value
+  // get to maximum value
   while (pth->thermodynamics_table[(index_tau+1)*pth->th_size+pth->index_th_g] <
          pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]) {
     index_tau--;
   }
 
   g_max=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+  index_tau_max=index_tau;
 
   // modifying visibility func
   if (pth->visfunc==visfunc_gaussian) {
-      for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
-        g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
-        g=(g_max/pth->alpha_vis) * pow(g / g_max, pow(pth->alpha_vis,-2.));
-        /** - ---> store g */
-        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
-      }
+      class_call(visibility_gaussian(pth, g_max,
+                                     pth->error_message),
+                 pth->error_message,
+                 pth->error_message);
   }
-  // else if (pth->visfunc==visfunc_skewnormal) {
-  //     for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
-  //       g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
-  //       g=//FIXME TODO
-  //       /** - ---> store g */
-  //       pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
-  //     }
-  // }
+  else if (pth->visfunc==visfunc_skewnormal) {
+      class_call(visibility_skew_normal(tau_table,
+                                        pth,
+                                        pth->index_th_dkappa,
+                                        index_tau_max,
+                                        pth->error_message),
+                 pth->error_message,
+                 pth->error_message);
+  }
 
   // now integrating to get dkappa / dtau
   // kappa = -ln(-int_1_tau f(g) dtau )
   // dkappa/dtau = f(g) / (-int_1_tau{f(g) dtau} + exp{-kappa(tau_0)})
   // kappa(tau_0) = 0 => exp{-kappa(tau_0)} = 1
   // temporarily store integral in column "index_th_dkappa" */
-  // TODO? MAYBE NOT ACTUALLY DOIN INTEGRAL CORRECTLY
   class_call(array_integrate_g_simple(tau_table,
-                                      pth->tt_size,
                                       pth->thermodynamics_table,
+                                      pth->tt_size,
                                       pth->th_size,
                                       pth->index_th_g,
                                       pth->index_th_dkappa,
@@ -2813,6 +2831,134 @@ int thermodynamics_recombination(
   return _SUCCESS_;
 
 }
+
+
+int visibility_gaussian(struct thermo * pth,
+                        double g_max,
+                        ErrorMsg errmsg) {
+    /** - define local variables */
+    int index_tau;
+    double g;
+
+    /** - modify g */
+    for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
+        // get g
+        g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+        // modify g
+        g=(g_max/pth->alpha_vis) * pow(g / g_max, pow(pth->alpha_vis,-2.));
+        /** - ---> store g */
+        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
+    }
+
+    return _SUCCESS_;
+}
+
+
+int visibility_skew_normal(double * tau_table,
+                           struct thermo * pth,
+                           int index_cdf,
+                           int index_eta_star,
+                           ErrorMsg errmsg) {
+    // have to call after finding the cdf
+
+    /** - define local variables */
+    int index_tau;
+    int i, j;
+    double g;
+    double *x;
+    double *xx;
+    double avg;
+    double sigma;
+    double S;
+    double mos, mobs;
+    double alpha, beta;
+    double etas;
+
+    alpha=pth->alpha_vis;
+    beta=pth->beta_vis;
+    etas=tau_table[index_eta_star];
+    x = malloc((pth->tt_size) * sizeof(double));
+
+    // calculate CDF
+    class_call(array_integrate_g_simple(tau_table,
+                                        pth->thermodynamics_table,
+                                        pth->tt_size,
+                                        pth->th_size,
+                                        pth->index_th_g,
+                                        pth->index_th_dkappa,
+                                        pth->error_message),
+               pth->error_message,
+               pth->error_message);
+
+    /** call */
+    x=visfunc_sample(tau_table,
+                     pth->thermodynamics_table,
+                     index_cdf,
+                     pth->tt_size,
+                     pth->th_size,
+                     0.0,
+                     500.0);
+
+    /** SUBSAMPLE X */
+    // subsampling because it always includes a few samples from tau=14000
+    // which throws everything off. Restricting the domain to tau<500
+    /** getting number of elements */
+    i=0; // reusing as main index
+    j=0; // reusing as size index
+    for (i=0; i<pth->tt_size; i++) {
+        if ((x[i] > 0.0) && (x[i] < 500.0)) {
+            j++;
+        }
+    }
+    xx=malloc((j) * sizeof(double));
+    pth->tau_vis_size=j;  // assigning size
+
+    /** getting subsample */
+    i=0; // reusing as main index
+    j=0; // reusing as size index
+    for (i=0; i<pth->tt_size; i++) {
+        if ((x[i] > 0.0) && (x[i] < 500.0)) {
+            // *(xx+j)=*(x+i);
+            xx[j]=x[i];
+            j++;
+        }
+    }
+
+    avg=visfunc_avg(xx, pth->tau_vis_size);
+    // printf("Average: %f\n", avg);
+    sigma=visfunc_sigma(xx, avg, pth->tau_vis_size);
+    // printf("Sigma: %f\n", sigma);
+    // S = visfunc_skew_param(pth->tau_vis_size,
+    //                        xx, avg, sigma,
+    //                        pth->thermodynamics_table);
+    S = 0.6; // FIXME
+    printf("S: %f\n", S);
+    mos = visfunc_mode(S);
+    printf("mos: %f\n", mos);
+    mobs = visfunc_mode(pth->beta_vis * S);
+    printf("mobs: %f\n", mobs);
+
+
+    for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
+      g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+      if (g > 0.00001) { // FIXME
+          g=((g/alpha)*
+             exp((pow(tau_table[index_tau] + sigma*mos - etas, 2.) -
+                  pow((tau_table[index_tau] + alpha*sigma*mobs - etas)/alpha, 2.)) /
+                 (2 * sigma * sigma)
+                ) *
+             (1 + erf(((S * beta) / (sqrt(2) * alpha * sigma)) * (tau_table[index_tau] + alpha*sigma*mos - etas))) /
+             (1 + erf((S / (sqrt(2) * sigma)) * (tau_table[index_tau] + sigma*mos - etas)))
+            );
+          /** - ---> store g */
+          pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
+      }
+    }
+
+   return _SUCCESS_;
+}
+
+
 
 /**
  * Integrate thermodynamics with HyRec.

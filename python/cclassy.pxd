@@ -86,6 +86,7 @@ cdef extern from "class.h":
         double YHe
         double n_e
         double alpha_vis
+        double beta_vis
 
         int tt_size
 
