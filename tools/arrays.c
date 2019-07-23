@@ -389,7 +389,7 @@ double visfunc_avg(double * x_array,
       avg+=x_array[i];
   }
   avg/=(double)n_lines;
-  printf("visfunc_avg: %f\n", avg);
+  // printf("visfunc_avg: %f\n", avg);
   return avg;
 }
 
@@ -442,20 +442,20 @@ double visfunc_skew_param(int n_lines,
   double param;  // skewness parameterization
   // have cdf
   E3=visfunc_third_moment(x_array, avg, n_lines);
-  printf("E3: %f\n", E3);
+  // printf("E3: %f\n", E3);
 
   // TODO compare definition against Ashour and Abdel-Hamid (2010)
   // skew=sqrt(n_lines*(n_lines-1))*E3/pow(sigma,3.)/(n_lines-2);
   skew=E3/pow(sigma,3.);
-  printf("skew: %f\n", skew);
+  // printf("skew: %f\n", skew);
 
   // delta from wikipedia
   delta=sqrt((_PI_/2.)*(pow(skew,2./3.) / (pow(skew,2./3.) + pow((4.-_PI_)/2., 2./3.))));
-  printf("delta: %f\n", delta);
+  // printf("delta: %f\n", delta);
 
   // skewness paramter
   param=delta/sqrt(1-delta*delta);
-  printf("param: %f\n", param);
+  // printf("param: %f\n", param);
 
   return param;
 }

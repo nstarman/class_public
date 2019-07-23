@@ -670,9 +670,9 @@ int thermodynamics_init(
     pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
 
     /** - ---> compute variation rate */
-    if (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] == 0.) {
-        printf("problem index: %d\n", index_tau);
-    }
+    // if (pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] == 0.) {
+    //     printf("problem index: %d\n", index_tau);
+    // }
     class_test(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] == 0.,
                pth->error_message,
                "variation rate diverges");
