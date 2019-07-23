@@ -471,9 +471,9 @@ int thermodynamics_init(
              pth->error_message,
              pth->error_message);
   // LIST
-  for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
-      printf("%f, ", pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa]);
-  }
+  // for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
+  //     printf("%f, ", pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa]);
+  // }
 
   /** - --> compute tau_d = [int_{tau_today}^{tau} dtau -dkappa_d/dtau] */
   class_call(array_integrate_spline_table_line_to_line(tau_table,
@@ -636,7 +636,7 @@ int thermodynamics_init(
 
   /** - --> compute visibility: \f$ g= (d \kappa/d \tau) e^{- \kappa} \f$ */
   /* loop on z (decreasing z, increasing time) */
-  printf("dkappa/dtau, -kappa, g, dg/dtau, \n");
+  // printf("dkappa/dtau, -kappa, g, dg/dtau, \n");
 
   for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
   // for (index_tau=preio->index_thermo_when_reio_start; index_tau>=0; index_tau--) {
@@ -685,13 +685,13 @@ int thermodynamics_init(
                  pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]));
 
   // Printing
-  printf("(%f, %f, %f, %f, %f), ",
-         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],
-         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa],
-         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g],
-         g,
-         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg]
-         );
+  // printf("(%f, %f, %f, %f, %f), ",
+  //        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],
+  //        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa],
+  //        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g],
+  //        g,
+  //        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg]
+  //        );
 
   }
 
@@ -2932,11 +2932,11 @@ int visibility_skew_normal(double * tau_table,
     //                        xx, avg, sigma,
     //                        pth->thermodynamics_table);
     S = 0.6; // FIXME
-    printf("S: %f\n", S);
+    // printf("S: %f\n", S);
     mos = visfunc_mode(S);
-    printf("mos: %f\n", mos);
+    // printf("mos: %f\n", mos);
     mobs = visfunc_mode(pth->beta_vis * S);
-    printf("mobs: %f\n", mobs);
+    // printf("mobs: %f\n", mobs);
 
 
     for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
