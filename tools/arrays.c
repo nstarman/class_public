@@ -321,7 +321,7 @@ double * visfunc_sample(double * x_array,
   int i;        // index through the cdf, and pdf
   int j;        // index through the uniform sample
   double *x;    // x sample
-  double *xx;   // x subsample
+  // double *xx;   // x subsample
   double u;     // uniform sample
   double N;     // double form of n_lines
   // double u0;     // uniform sample
@@ -449,15 +449,15 @@ double visfunc_skew_param(int n_lines,
   skew=E3/pow(sigma,3.);
   // printf("skew: %f\n", skew);
 
-  // delta from wikipedia
-  delta=sqrt((_PI_/2.)*(pow(skew,2./3.) / (pow(skew,2./3.) + pow((4.-_PI_)/2., 2./3.))));
-  // printf("delta: %f\n", delta);
+  // // delta from wikipedia
+  // delta=sqrt((_PI_/2.)*(pow(skew,2./3.) / (pow(skew,2./3.) + pow((4.-_PI_)/2., 2./3.))));
+  // // printf("delta: %f\n", delta);
+  //
+  // // skewness paramter
+  // param=delta/sqrt(1-delta*delta);
+  // // printf("param: %f\n", param);
 
-  // skewness paramter
-  param=delta/sqrt(1-delta*delta);
-  // printf("param: %f\n", param);
-
-  return param;
+  return skew;
 }
 
 double visfunc_sigmaz(double muz){

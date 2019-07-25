@@ -2762,14 +2762,10 @@ int thermodynamics_recombination(
   while (pth->z_table[index_tau]>_Z_REC_MAX_) {
     index_tau--;
   }
-
-  // testing found value
   class_test(pth->thermodynamics_table[(index_tau+1)*pth->th_size+pth->index_th_g] >
              pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g],
              pth->error_message,
              "found a recombination redshift greater or equal to the maximum value imposed in thermodynamics.h, z_rec_max=%g",_Z_REC_MAX_);
-
-  // get to maximum value
   while (pth->thermodynamics_table[(index_tau+1)*pth->th_size+pth->index_th_g] <
          pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]) {
     index_tau--;
@@ -2810,7 +2806,7 @@ int thermodynamics_recombination(
              pth->error_message,
              pth->error_message);
 
-  int_g_tot = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_dkappa];
+  int_g_tot = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_dkappa];  // 1.0
 
   // getting dkappa/dtau
   for (index_tau=0; index_tau<=(pth->tt_size-1); index_tau++) {
@@ -2928,11 +2924,12 @@ int visibility_skew_normal(double * tau_table,
     // printf("Average: %f\n", avg);
     sigma=visfunc_sigma(xx, avg, pth->tau_vis_size);
     // printf("Sigma: %f\n", sigma);
-    // S = visfunc_skew_param(pth->tau_vis_size,
-    //                        xx, avg, sigma,
-    //                        pth->thermodynamics_table);
-    S = 0.6; // FIXME
+    S = visfunc_skew_param(pth->tau_vis_size,
+                           xx, avg, sigma,
+                           pth->thermodynamics_table);
     // printf("S: %f\n", S);
+    // S = 0.6;
+
     mos = visfunc_mode(S);
     // printf("mos: %f\n", mos);
     mobs = visfunc_mode(pth->beta_vis * S);
@@ -2947,7 +2944,7 @@ int visibility_skew_normal(double * tau_table,
                   pow((tau_table[index_tau] + alpha*sigma*mobs - etas)/alpha, 2.)) /
                  (2 * sigma * sigma)
                 ) *
-             (1 + erf(((S * beta) / (sqrt(2) * alpha * sigma)) * (tau_table[index_tau] + alpha*sigma*mos - etas))) /
+             (1 + erf(((beta * S) / (sqrt(2) * alpha * sigma)) * (tau_table[index_tau] + alpha*sigma*mos - etas))) /
              (1 + erf((S / (sqrt(2) * sigma)) * (tau_table[index_tau] + sigma*mos - etas)))
             );
           /** - ---> store g */
