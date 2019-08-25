@@ -4,6 +4,7 @@
 #define __THERMODYNAMICS__
 
 #include "background.h"
+#include "modvisfunc.h"
 //#include "arrays.h"
 //#include "helium.h"
 //#include "hydrogen.h"
@@ -16,6 +17,10 @@ enum recombination_algorithm {
   recfast,
   hyrec
 };
+
+/**
+ * List of possible visibility function parameterizations.
+ */
 
 enum visibility_function_parametrization {
   visfunc_none,       /**< no parameterization */
@@ -73,10 +78,11 @@ struct thermo
 
   enum recombination_algorithm recombination; /**< recombination code */
 
-  enum visibility_function_parametrization visfunc;  /**< visibility function parameterization @nstarman*/
-  double alpha_vis;  /**< visibility function width @nstarman*/
-  double beta_vis;  /**< visibility function skewness @nstarman*/
-  double S_vis;  /**< visibility function intrinsic skewness @nstarman*/
+  // visibility function
+  enum visibility_function_parametrization visfunc;  /**< visibility function parameterization*/
+  double alpha_vis;  /**< visibility function width*/
+  double beta_vis;  /**< visibility function skewness*/
+  double S_vis;  /**< visibility function intrinsic skewness*/
   int tau_vis_size; /*  */
 
   enum reionization_parametrization reio_parametrization; /**< reionization scheme */
@@ -363,7 +369,8 @@ struct recombination {
 
 };
 
-int visibility_gaussian(struct thermo * pth,
+int visibility_gaussian(double * tau_table,
+                        struct thermo * pth,
                         double g_max,
                         ErrorMsg errmsg);
 int visibility_skew_normal(double * tau_table,

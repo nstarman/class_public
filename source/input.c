@@ -1162,7 +1162,7 @@ int input_read_parameters(
 
   }
 
-  // visfunc options
+  /** - visibility function parameters */
   class_call(parser_read_string(pfc,"visfunc",&string1,&flag1,errmsg),
              errmsg,
              errmsg);
@@ -1201,7 +1201,7 @@ int input_read_parameters(
                  errmsg,
                  "visfunc must be in: (none, None), (gaussian, normal), (skew-gaussian, skew-normal)");
   }
-  // visfunc is NOT an argument, throw error if params are passed
+  // visfunc is NOT an argument, throw error if visfunc params are passed
   else {
       class_call(parser_read_double(pfc,"alpha_vis",&param1,&flag1,errmsg),
                  errmsg,
