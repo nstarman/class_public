@@ -76,6 +76,7 @@ struct thermo
   enum visibility_function_parametrization visfunc;  /**< visibility function parameterization @nstarman*/
   double alpha_vis;  /**< visibility function width @nstarman*/
   double beta_vis;  /**< visibility function skewness @nstarman*/
+  double S_vis;  /**< visibility function intrinsic skewness @nstarman*/
   int tau_vis_size; /*  */
 
   enum reionization_parametrization reio_parametrization; /**< reionization scheme */
@@ -367,8 +368,7 @@ int visibility_gaussian(struct thermo * pth,
                         ErrorMsg errmsg);
 int visibility_skew_normal(double * tau_table,
                            struct thermo * pth,
-                           int index_cdf,
-                           int index_eta_star,
+                           double etas,
                            ErrorMsg errmsg);
 
 

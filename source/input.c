@@ -1166,34 +1166,42 @@ int input_read_parameters(
   class_call(parser_read_string(pfc,"visfunc",&string1,&flag1,errmsg),
              errmsg,
              errmsg);
+  // visfunc is an argument, now looking at visfunc parameterizations
   if (flag1 == _TRUE_) {
-      flag2=_FALSE_;
+      flag2=_FALSE_; // allowed visfunc options. Checking now...
+
+      // None
       if ((strcmp(string1,"none") == 0) || (strcmp(string1,"None") == 0)) {
           pth->visfunc=visfunc_none;
           flag2=_TRUE_;
       }
+      // Gaussian
       else if ((strcmp(string1,"gaussian") == 0) || (strcmp(string1,"normal") == 0)) {
           if (input_verbose > 0) {
             printf("using Gaussian parameterization of the visibility function, using alpha_vis parameter.\n");
           }
           pth->visfunc=visfunc_gaussian;
-          class_read_double("alpha_vis",pth->alpha_vis); /* visibility function gaussian width  @nstarman */
+          class_read_double("alpha_vis",pth->alpha_vis); // visfunc width
           flag2=_TRUE_;
       }
+      // Skew-Normal
       else if ((strcmp(string1,"skew-gaussian") == 0) || (strcmp(string1,"skew-normal") == 0)) {
           if (input_verbose > 0) {
               printf("using skew-normal parameterization of the visibility function, using alpha_vis, beta_vis parameters.\n");
             }
           pth->visfunc=visfunc_skewnormal;
-          class_read_double("alpha_vis",pth->alpha_vis); /* visibility function gaussian width  @nstarman */
-          class_read_double("beta_vis",pth->beta_vis);   /* visibility function skewness        @nstarman */
+          class_read_double("alpha_vis",pth->alpha_vis); // visfunc width
+          class_read_double("beta_vis",pth->beta_vis);   // visfunc skewness
+          class_read_double("S_vis",pth->S_vis);         // visfunc skewness
           flag2=_TRUE_;
       }
 
+      // Error b/c no allowed option
       class_test(flag2==_FALSE_,
                  errmsg,
                  "visfunc must be in: (none, None), (gaussian, normal), (skew-gaussian, skew-normal)");
   }
+  // visfunc is NOT an argument, throw error if params are passed
   else {
       class_call(parser_read_double(pfc,"alpha_vis",&param1,&flag1,errmsg),
                  errmsg,
@@ -1201,8 +1209,11 @@ int input_read_parameters(
       class_call(parser_read_double(pfc,"beta_vis",&param2,&flag2,errmsg),
                  errmsg,
                  errmsg);
+      class_call(parser_read_double(pfc,"S_vis",&param3,&flag3,errmsg),
+                 errmsg,
+                 errmsg);
 
-      class_test((flag1 == _TRUE_) || (flag2 == _TRUE_),
+      class_test((flag1 == _TRUE_) || (flag2 == _TRUE_) || (flag3 == _TRUE_),
                  errmsg,
                  "visfunc argument not provided, cannot specify any visfunc parameters.");
   }
@@ -3057,7 +3068,8 @@ int input_default_params(
   pth->recombination=recfast;
   pth->visfunc=visfunc_none; /* added visibility function params  @nstarman */
   pth->alpha_vis = 1.;  /* visfunc width  @nstarman */
-  pth->beta_vis = 1.;  /* visfunc width  @nstarman */
+  pth->beta_vis = 1.;  /* visfunc skewness  @nstarman */
+  pth->S_vis = -999; /* visfunc intrisic skewness, set to NULL  @nstarman */
   pth->reio_parametrization=reio_camb;
   pth->reio_z_or_tau=reio_z;
   pth->z_reio=11.357;

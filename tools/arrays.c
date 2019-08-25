@@ -257,6 +257,8 @@ int array_integrate_g_simple(double * x_array,
 					         int index_y,
 					         int index_inty,
 					         ErrorMsg errmsg) {
+  // integrate the visibility function (g)
+  // without using derivatives of g
 
   int i;
 
