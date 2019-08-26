@@ -28,7 +28,7 @@ double integrate_g_simple(double * x_array,
 // integrate g w/out using its derivatives
 // store integral array
 int array_integrate_g_simple(double * x_array,
-					         double * array,
+					         double * y_array,
                              int n_lines,
 					         int n_columns,
 					         int index_y,
@@ -37,20 +37,18 @@ int array_integrate_g_simple(double * x_array,
 
 // integrate g using its derivatives
 // store integral array
-int array_integrate_g(
-                  double * x_array,
-                  int n_lines,
-                  double * array,
-                  int n_columns,
-                  int index_y,
-                  int index_ddy,
-                  int index_inty,
-                  ErrorMsg errmsg);
+int array_integrate_g(double * x_array,
+			          double * y_array,
+                      int n_lines,
+			          int n_columns,
+			          int index_y,
+			          int index_inty,
+			          ErrorMsg errmsg);
 
 // sample from the original visibility function
 // for inverse CDF method
 double * visfunc_sample(double * x_array,
-                      double * array,
+                      double * y_array,
                       int index_cdf,
                       int n_lines,
                       int n_columns,

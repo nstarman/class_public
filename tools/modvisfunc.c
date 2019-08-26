@@ -33,16 +33,15 @@ double integrate_g_simple(double * x_array,
   int i;
   double h;
 
- /** - integrating */
+  /** - integrating */
   intg  = 0.;
 
-  for (i=0; i<=n_lines-1; i++) {
-  // for (i=n_lines-1; i>=0; i--) {
+  // for (i=0; i<=n_lines-1; i++) {
+  for (i=n_lines-1; i>0; i--) {
 
-    h = -(x_array[i+1]-x_array[i]);  // need -h
-    // h = (x_array[i+1]-x_array[i]);  // need -h
+    h = (x_array[i-1] - x_array[i]);
 
-    intg += (y_array[i*n_columns+index_y]+y_array[(i+1)*n_columns+index_y])*h/2.;
+    intg += (y_array[(i-1)*n_columns+index_y]+y_array[i*n_columns+index_y])*h/2.;
 
   }
 
@@ -51,7 +50,7 @@ double integrate_g_simple(double * x_array,
 
 
 int array_integrate_g_simple(double * x_array,
-                             double * array,
+                             double * y_array,
                              int n_lines,
                              int n_columns,
                              int index_y,
@@ -63,14 +62,14 @@ int array_integrate_g_simple(double * x_array,
   int i;
   double h;
 
-  *(array+0*n_columns+index_inty)  = 0.;
+  *(y_array+0*n_columns+index_inty)  = 0.;
 
-  for (i=0; i < n_lines-1; i++) {
+  for (i=0; i<n_lines-1; i++) {
 
-    h = -(x_array[i+1]-x_array[i]);  // need -h
+    h = (x_array[i] - x_array[i+1]);
 
-    *(array+(i+1)*n_columns+index_inty) = *(array+i*n_columns+index_inty) +
-      (array[i*n_columns+index_y]+array[(i+1)*n_columns+index_y])*h/2.;
+    *(y_array+(i+1)*n_columns+index_inty) = *(y_array+i*n_columns+index_inty) +
+      (y_array[i*n_columns+index_y]+y_array[(i+1)*n_columns+index_y])*h/2.;
 
   }
 
@@ -79,27 +78,24 @@ int array_integrate_g_simple(double * x_array,
 
 
 int array_integrate_g(double * x_array,
-            int n_lines,
-            double * array,
-            int n_columns,
-            int index_y,
-                      int index_ddy,
-            int index_inty,
-            ErrorMsg errmsg) {
+                      double * y_array,
+                      int n_lines,
+                      int n_columns,
+                      int index_y,
+                      int index_inty,
+                      ErrorMsg errmsg) {
 
   int i;
-
   double h;
 
-  *(array+0*n_columns+index_inty)  = 0.;
+  *(y_array+(n_lines-1)*n_columns+index_inty)  = 0.;
 
-  for (i=0; i < n_lines-1; i++) {
+  for (i=n_lines-1; i>0; i--) {
 
-    h = -(x_array[i+1]-x_array[i]);  // need -h
+    h = (x_array[i-1] - x_array[i]);
 
-    *(array+(i+1)*n_columns+index_inty) = *(array+i*n_columns+index_inty) +
-      (array[i*n_columns+index_y]+array[(i+1)*n_columns+index_y])*h/2.+
-      (array[i*n_columns+index_ddy]+array[(i+1)*n_columns+index_ddy])*h*h*h/24.;
+    *(y_array+(i-1)*n_columns+index_inty) = *(y_array+i*n_columns+index_inty) +
+      (y_array[(i-1)*n_columns+index_y]+y_array[i*n_columns+index_y])*h/2.;
 
   }
 
@@ -108,7 +104,7 @@ int array_integrate_g(double * x_array,
 
 
 double * visfunc_sample(double * x_array,
-                        double * array,
+                        double * y_array,
                         int index_cdf,
                         int n_lines,
                         int n_columns,
@@ -137,7 +133,7 @@ double * visfunc_sample(double * x_array,
 
   for (j=0; j<n_lines; j++) {
       u = j/N;  // 0<uj<1
-      while (u > *(array+i*n_columns+index_cdf)) {
+      while (u > *(y_array+i*n_columns+index_cdf)) {
           i++;
       }
       *(xx+j)=*(x_array+i);
