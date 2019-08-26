@@ -36,9 +36,11 @@ double integrate_g_simple(double * x_array,
  /** - integrating */
   intg  = 0.;
 
-  for (i=0; i < n_lines-1; i++) {
+  for (i=0; i<=n_lines-1; i++) {
+  // for (i=n_lines-1; i>=0; i--) {
 
     h = -(x_array[i+1]-x_array[i]);  // need -h
+    // h = (x_array[i+1]-x_array[i]);  // need -h
 
     intg += (y_array[i*n_columns+index_y]+y_array[(i+1)*n_columns+index_y])*h/2.;
 
@@ -110,23 +112,24 @@ double * visfunc_sample(double * x_array,
                         int index_cdf,
                         int n_lines,
                         int n_columns,
+                        int* tau_vis_size,
                         double x_low,
                         double x_up
                         ) {
   // sample a PDF by inverse CDF sampling
-  // TODO use index_cdf in array so don't need both
+  // between two values
 
   /** - define local variables */
   int i;        // index through the cdf, and pdf
   int j;        // index through the uniform sample
-  double *x;    // x sample
-  // double *xx;   // x subsample
+  double *xx;   // x sample
+  double *x;    // x subsample
   double u;     // uniform sample
   double N;     // double form of n_lines
-  // double u0;     // uniform sample
+  // double u0; // uniform sample
 
   /** SAMPLE X */
-  x=malloc((n_lines) * sizeof(double));
+  xx=malloc((n_lines) * sizeof(double));
   i=0;
   u=0.;
   N=(double)n_lines;
@@ -137,38 +140,34 @@ double * visfunc_sample(double * x_array,
       while (u > *(array+i*n_columns+index_cdf)) {
           i++;
       }
-      *(x+j)=x_array[i];
+      *(xx+j)=*(x_array+i);
   }
 
-  // /** SUBSAMPLE X */
-  // /** getting number of elements */
-  // i=0; // reusing as main index
-  // j=0; // reusing as size index
-  // for (i=0; i<n_lines; i++) {
-  //     if ((x[i] > x_low) && (x[i] < x_up)) {
-  //         j++;
-  //     }
-  // }
-  // printf("j: %d\n", j);
-  // xx=malloc((j) * sizeof(double));
-  //
-  // /** getting subsample */
-  // i=0; // reusing as main index
-  // j=0; // reusing as size index
-  // for (i=0; i<n_lines; i++) {
-  //     if ((x[i] > x_low) && (x[i] < x_up)) {
-  //         // *(xx+j)=*(x+i);
-  //         xx[j]=x[i];
-  //         j++;
-  //     }
-  // }
-  // printf("j: %d\n", j);
-  //
-  // printf("X SUBSAMPLE\n");
-  // for (i=0; i<j; i++) {
-  //     printf("%f, ", xx[i]);
-  // }
-  //
+  /** SUBSAMPLE X */
+  // subsampling because it always includes a few samples from tau=14000
+  // which throws everything off. Restricting the domain to tau<500
+  /** getting number of elements */
+  i=0; // reusing as main index
+  j=0; // reusing as size index
+  for (i=0; i<n_lines; i++) {
+      if ((xx[i] > x_low) && (xx[i] < x_up)) {
+          j++;
+      }
+  }
+
+  x=malloc((j) * sizeof(double));
+  *tau_vis_size=j;  // assigning size
+
+  /** now that have size, getting subsample */
+  i=0; // reusing as main index
+  j=0; // reusing as size index
+  for (i=0; i<n_lines; i++) {
+      if ((xx[i] > x_low) && (xx[i] < x_up)) {
+          x[j]=xx[i];
+          j++;
+      }
+  }
+
   return x;
 }
 

@@ -7,8 +7,8 @@
 
 #include "common.h"
 
-#define _SPLINE_NATURAL_ 0 /**< natural spline: ddy0=ddyn=0 */
-#define _SPLINE_EST_DERIV_ 1 /**< spline with estimation of first derivative on both edges */
+// #define _SPLINE_NATURAL_ 0 /**< natural spline: ddy0=ddyn=0 */
+// #define _SPLINE_EST_DERIV_ 1 /**< spline with estimation of first derivative on both edges */
 
 /**
  * Boilerplate for C++
@@ -54,6 +54,7 @@ double * visfunc_sample(double * x_array,
                       int index_cdf,
                       int n_lines,
                       int n_columns,
+                      int * tau_vis_size,
                       double x_low,
                       double x_up
                       );

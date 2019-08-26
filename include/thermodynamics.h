@@ -80,10 +80,12 @@ struct thermo
 
   // visibility function
   enum visibility_function_parametrization visfunc;  /**< visibility function parameterization*/
-  double alpha_vis;  /**< visibility function width*/
-  double beta_vis;  /**< visibility function skewness*/
-  double S_vis;  /**< visibility function intrinsic skewness*/
-  int tau_vis_size; /*  */
+  double alpha_vis; /**< g 'width' multiplier*/
+  double beta_vis;  /**< g skewness multiplier*/
+  double S0_vis;   /**< g initial intrinsic skewness*/
+  double S_vis;     /**< g intrinsic skewness*/
+  int tau_vis_size;
+  // int* ptvs = &tau_vis_size; // pointer to tau_vis_size
 
   enum reionization_parametrization reio_parametrization; /**< reionization scheme */
 
