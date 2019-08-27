@@ -293,8 +293,6 @@ struct recombination {
   int index_re_Tb;         /**< baryon temperature \f$ T_b \f$ */
   int index_re_cb2;        /**< squared baryon sound speed \f$ c_b^2 \f$ */
   int index_re_dkappadtau; /**< Thomson scattering rate \f$ d \kappa / d \tau \f$ (units 1/Mpc) */
-  int index_re_dddkappadtau; /**< 2nd derivative of Thomson scattering rate @nstarman */
-  int index_re_g;          /**< visibility function @nstarman */
   int re_size;             /**< size of this vector */
 
   //@}
@@ -373,11 +371,11 @@ struct recombination {
 
 int visibility_gaussian(double * tau_table,
                         struct thermo * pth,
-                        double g_max,
+                        // double g_max,
                         ErrorMsg errmsg);
 int visibility_skew_normal(double * tau_table,
                            struct thermo * pth,
-                           double etas,
+                           // double etas,
                            ErrorMsg errmsg);
 
 

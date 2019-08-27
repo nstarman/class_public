@@ -6,32 +6,31 @@
 #include "modvisfunc.h"
 
 
-double integrate_g_simple(double * x_array,
-                          double * y_array,
-                          int n_lines,
-                          int n_columns,
-                          int index_y) {
+double integrate_g(double * x_array,
+                   int n_lines,
+                   double * array,
+                   int n_columns,
+                   int index_y) {
   /** integrate the visibility function w/out derivatives
   returns just the final integral value
   
   INPUT:
-  tau_table,
-  pth->thermodynamics_table,
-  pth->tt_size,
-  pth->th_size,
-  pth->index_th_g,
-  pth->error_message
+  x_array   : tau_table 
+  n_lines   : pth->tt_size
+  array     : pth->thermodynamics_table
+  n_columns : pth->th_size
+  index_y   : pth->index_th_g
 
-  local variables
-  double intg // the resulting integral value
-  int i;      // index
-  double h;   // step size
+  Local Variables:
+  double intg                 : the resulting integral value
+  int i;                      : index
+  double h;                   : step size
   */
 
   /** - define local variables */
-  double intg;
-  int i;
-  double h;
+  double intg; // integral
+  int i;       // index
+  double h;    // step size
 
  /** - integrating */
   intg  = 0.;
@@ -42,7 +41,7 @@ double integrate_g_simple(double * x_array,
     h = -(x_array[i+1]-x_array[i]);  // need -h
     // h = (x_array[i+1]-x_array[i]);  // need -h
 
-    intg += (y_array[i*n_columns+index_y]+y_array[(i+1)*n_columns+index_y])*h/2.;
+    intg += (array[i*n_columns+index_y]+array[(i+1)*n_columns+index_y])*h/2.;
 
   }
 
@@ -50,9 +49,9 @@ double integrate_g_simple(double * x_array,
 }
 
 
-int array_integrate_g_simple(double * x_array,
-                             double * array,
+int array_integrate_g(double * x_array,
                              int n_lines,
+                             double * array,
                              int n_columns,
                              int index_y,
                              int index_inty,
@@ -78,40 +77,11 @@ int array_integrate_g_simple(double * x_array,
 }
 
 
-int array_integrate_g(double * x_array,
-            int n_lines,
-            double * array,
-            int n_columns,
-            int index_y,
-                      int index_ddy,
-            int index_inty,
-            ErrorMsg errmsg) {
-
-  int i;
-
-  double h;
-
-  *(array+0*n_columns+index_inty)  = 0.;
-
-  for (i=0; i < n_lines-1; i++) {
-
-    h = -(x_array[i+1]-x_array[i]);  // need -h
-
-    *(array+(i+1)*n_columns+index_inty) = *(array+i*n_columns+index_inty) +
-      (array[i*n_columns+index_y]+array[(i+1)*n_columns+index_y])*h/2.+
-      (array[i*n_columns+index_ddy]+array[(i+1)*n_columns+index_ddy])*h*h*h/24.;
-
-  }
-
-  return _SUCCESS_;
-}
-
-
 double * visfunc_sample(double * x_array,
-                        double * array,
-                        int index_cdf,
                         int n_lines,
+                        double * array,
                         int n_columns,
+                        int index_cdf,
                         int* tau_vis_size,
                         double x_low,
                         double x_up

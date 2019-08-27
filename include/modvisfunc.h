@@ -19,45 +19,44 @@ extern "C" {
 
 // integrate g w/out using its derivatives
 // return integral value
-double integrate_g_simple(double * x_array,
-				          double * y_array,
+double integrate_g(double * x_array,
                           int n_lines,
+				          double * array,
 				          int n_columns,
 				          int index_y);
 
 // integrate g w/out using its derivatives
 // store integral array
-int array_integrate_g_simple(double * x_array,
+int array_integrate_g(double * x_array,
+							 int n_lines,
 					         double * array,
-                             int n_lines,
 					         int n_columns,
 					         int index_y,
 					         int index_inty,
 					         ErrorMsg errmsg);
 
-// integrate g using its derivatives
-// store integral array
-int array_integrate_g(
-                  double * x_array,
-                  int n_lines,
-                  double * array,
-                  int n_columns,
-                  int index_y,
-                  int index_ddy,
-                  int index_inty,
-                  ErrorMsg errmsg);
+// // integrate g using its derivatives
+// // store integral array
+// int array_integrate_g(double * x_array,
+//                       int n_lines,
+//                       double * array,
+//                       int n_columns,
+//                       int index_y,
+//                       int index_ddy,
+//                       int index_inty,
+//                       ErrorMsg errmsg);
 
 // sample from the original visibility function
 // for inverse CDF method
 double * visfunc_sample(double * x_array,
-                      double * array,
-                      int index_cdf,
-                      int n_lines,
-                      int n_columns,
-                      int * tau_vis_size,
-                      double x_low,
-                      double x_up
-                      );
+						int n_lines,
+	                    double * array,
+	                    int n_columns,
+	                    int index_cdf,
+	                    int * tau_vis_size,
+	                    double x_low,
+	                    double x_up
+	                    );
 
 // double * visfunc_subsample(struct thermo * pth,
 //                            double * x_array,
