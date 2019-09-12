@@ -935,6 +935,8 @@ int thermodynamics_indices(
   index++;
   pth->index_th_exp_m_kappa = index;
   index++;
+  pth->index_th_G = index;
+  index++;
   pth->index_th_g = index;
   index++;
   pth->index_th_dg = index;
@@ -2771,25 +2773,25 @@ int thermodynamics_recombination(
   // kappa = -ln(-int_1_tau f(g) dtau )
   // dkappa/dtau = f(g) / (-int_1_tau{f(g) dtau} + exp{-kappa(tau_0)})
   // kappa(tau_0) = 0 => exp{-kappa(tau_0)} = 1
-  // temporarily store (negative of) integral in column "index_th_Tb" */
+  // store (negative of) integral in column "index_th_G" */
   class_call(array_integrate_spline_table_line_to_line(tau_table,
                                                        pth->tt_size,
                                                        pth->thermodynamics_table,
                                                        pth->th_size,
                                                        pth->index_th_g,
                                                        pth->index_th_ddg,
-                                                       pth->index_th_Tb,
+                                                       pth->index_th_G,
                                                        pth->error_message),
                pth->error_message,
                pth->error_message);
 
-  int_g_tot = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_Tb];  // 1.0
+  int_g_tot = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_G];  // 1.0
 
   // getting dkappa/dtau
   for (index_tau=(pth->tt_size-1); index_tau>=0; index_tau--) {
     g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
 
-    Gdiff = fabs(int_g_tot - pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_Tb]);
+    Gdiff = fabs(int_g_tot - pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_G]);
 
     // FIXME, introduces a discontinuity in the derivative
     if ((g > 0.1 * 0.02 * ppr->neglect_CMB_sources_below_visibility) && (g > 0.) && (Gdiff > 0.0)) {
@@ -2946,25 +2948,23 @@ int visibility_skew_normal(double * tau_table,
     g_max=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
     etas = tau_table[index_tau];
 
-    /** - calculate CDF, store in index_th_Tb */
-    class_call(array_integrate_g(tau_table,
-                                        pth->tt_size,
-                                        pth->thermodynamics_table,
-                                        pth->th_size,
-                                        pth->index_th_g,
-                                        pth->index_th_Tb,
-                                        pth->error_message),
+    /** - calculate CDF, store in index_th_G */
+    class_call(array_integrate_g(tau_table, pth->tt_size,
+                                 pth->thermodynamics_table, pth->th_size,
+                                 pth->index_th_g,
+                                 pth->index_th_G,
+                                 pth->error_message),
                pth->error_message,
                pth->error_message);
 
-    // g_int_norm = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_Tb];  // 1.0
+    // g_int_norm = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_G];  // 1.0
 
     /** - sample */
     x=visfunc_sample(tau_table,
                      pth->tt_size,
                      pth->thermodynamics_table,
                      pth->th_size,
-                     pth->index_th_Tb,
+                     pth->index_th_G,
                      ptvs,        // pointer to tau_vis_size
                      0.0, 500.0); // tau sample region
 
