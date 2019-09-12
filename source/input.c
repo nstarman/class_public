@@ -1189,23 +1189,28 @@ int input_read_parameters(
       }
       // Skew-Normal
       else if ((strcmp(string1,"skew-gaussian") == 0) || (strcmp(string1,"skew-normal") == 0)) {
-          if (input_verbose > 0) {
-              printf("using skew-normal parameterization of the visibility function, using alpha_vis, beta_vis, S(0)_vis parameters.\n");
-            }
-          pth->visfunc=visfunc_skewnormal;
-          flag2=_TRUE_;
-          // read parameters
-          class_read_double("alpha_vis",pth->alpha_vis); // visfunc width
-          class_read_double("beta_vis", pth->beta_vis);  // visfunc skewness
-          class_read_double("S_vis",    pth->S_vis);     // final intrinsic skewness
-          class_read_double("S0_vis",   pth->S0_vis);    // initial intrinsic skewness
-          // test parameters
-          class_test((pth->alpha_vis <= 0.), errmsg, "alpha_vis <= 0");
-          class_test((pth->beta_vis <= 0.), errmsg, "beta_vis <= 0");
-          if ((pth->S0_vis == -999) && (pth->S_vis != -999)) {
-              printf("Setting S0_vis = S_vis\n");
-              pth->S0_vis = pth->S_vis;
-          }
+          // FIXME NOT IMPLEMENTED FOR THIS BRANCH
+          class_test(flag2==_FALSE_,
+                 errmsg,
+                 "skew-normal is not implemented for this branch");
+
+          // if (input_verbose > 0) {
+          //     printf("using skew-normal parameterization of the visibility function, using alpha_vis, beta_vis, S(0)_vis parameters.\n");
+          //   }
+          // pth->visfunc=visfunc_skewnormal;
+          // flag2=_TRUE_;
+          // // read parameters
+          // class_read_double("alpha_vis",pth->alpha_vis); // visfunc width
+          // class_read_double("beta_vis", pth->beta_vis);  // visfunc skewness
+          // class_read_double("S_vis",    pth->S_vis);     // final intrinsic skewness
+          // class_read_double("S0_vis",   pth->S0_vis);    // initial intrinsic skewness
+          // // test parameters
+          // class_test((pth->alpha_vis <= 0.), errmsg, "alpha_vis <= 0");
+          // class_test((pth->beta_vis <= 0.), errmsg, "beta_vis <= 0");
+          // if ((pth->S0_vis == -999) && (pth->S_vis != -999)) {
+          //     printf("Setting S0_vis = S_vis\n");
+          //     pth->S0_vis = pth->S_vis;
+          // }
 
       }
 

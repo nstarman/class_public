@@ -633,8 +633,6 @@ int thermodynamics_init(
                pth->error_message);
   }
 
-  free(tau_table);
-
   /** - --> compute visibility: \f$ g= (d \kappa/d \tau) e^{- \kappa} \f$ */
   /* loop on z (decreasing z, increasing time) */
   // printf("dkappa/dtau, -kappa, g, dg/dtau, \n");
@@ -694,6 +692,22 @@ int thermodynamics_init(
   }
 
 
+  /* - modifying visibility function */
+  if (pth->visfunc==visfunc_gaussian) {
+      class_call(visibility_gaussian(tau_table, pth,
+                                     pth->error_message),
+                 pth->error_message,
+                 pth->error_message);
+  }
+  else if (pth->visfunc==visfunc_skewnormal) {
+      class_call(visibility_skew_normal(tau_table, pth,
+                                        pth->error_message),
+                 pth->error_message,
+                 pth->error_message);
+  }
+
+
+  free(tau_table);
 
 
   /** - smooth the rate (details of smoothing unimportant: only the
@@ -2640,17 +2654,17 @@ int thermodynamics_recombination(
                                  ) {
   /** - define local variables */
   /* index running over time*/
-  int index_tau;
+  // int index_tau;
   /* temporary table of values of tau */
-  double * tau_table;
+  // double * tau_table;
   /* temporary variables related to visibility function */
-  double g;
-  double g_max;
-  double int_g_tot;
-  double g_int_norm;
-  double Gdiff;
+  // double g;
+  // double g_max;
+  // double int_g_tot;
+  // double g_int_norm;
+  // double Gdiff;
   /* temporary variables related to reionisation */
-  enum reionization_parametrization reio_param;
+  // enum reionization_parametrization reio_param;
 
   /** - calculate recombination */
 
@@ -2670,145 +2684,145 @@ int thermodynamics_recombination(
 
   }
 
-  /** - Now modifying kappa based off modification to g */ //@nstarman
+  // /** - Now modifying kappa based off modification to g */ //@nstarman
 
-  // first check if even need to modify
-  // don't need to modify if visfunc is the CLASS standard
-  if (pth->visfunc==visfunc_none) {
-      return _SUCCESS_;
-  }
+  // // first check if even need to modify
+  // // don't need to modify if visfunc is the CLASS standard
+  // if (pth->visfunc==visfunc_none) {
+  //     return _SUCCESS_;
+  // }
 
-  /** Get Thermodynamics History */
-  // pretend reio_none so that get a recombination-only thermodynamics
-  reio_param=pth->reio_parametrization; // store reionization parametrization
-  pth->reio_parametrization=reio_none;  // set reio to none
-  preio->rt_size=0;
-  preio->index_reco_when_reio_start=-1;
+  // /** Get Thermodynamics History */
+  // // pretend reio_none so that get a recombination-only thermodynamics
+  // reio_param=pth->reio_parametrization; // store reionization parametrization
+  // pth->reio_parametrization=reio_none;  // set reio to none
+  // preio->rt_size=0;
+  // preio->index_reco_when_reio_start=-1;
 
-  // merge (with 0 reio)
-  class_call(thermodynamics_merge_reco_and_reio(ppr,pth,preco,preio),
-             pth->error_message,
-             pth->error_message);
+  // // merge (with 0 reio)
+  // class_call(thermodynamics_merge_reco_and_reio(ppr,pth,preco,preio),
+  //            pth->error_message,
+  //            pth->error_message);
 
-  /** - compute table of corresponding conformal times */
-  class_alloc(tau_table,pth->tt_size*sizeof(double),pth->error_message);
-  for (index_tau=0; index_tau < pth->tt_size; index_tau++) {
-    class_call(background_tau_of_z(pba,
-                                   pth->z_table[index_tau],
-                                   tau_table+index_tau),
-               pba->error_message,
-               pth->error_message);
-  }
+  // /** - compute table of corresponding conformal times */
+  // class_alloc(tau_table,pth->tt_size*sizeof(double),pth->error_message);
+  // for (index_tau=0; index_tau < pth->tt_size; index_tau++) {
+  //   class_call(background_tau_of_z(pba,
+  //                                  pth->z_table[index_tau],
+  //                                  tau_table+index_tau),
+  //              pba->error_message,
+  //              pth->error_message);
+  // }
 
-  /** - --> second derivative with respect to tau of dkappa
-    (in view of spline interpolation) */
-  class_call(array_spline_table_line_to_line(tau_table,
-                                             pth->tt_size,
-                                             pth->thermodynamics_table,
-                                             pth->th_size,
-                                             pth->index_th_dkappa,
-                                             pth->index_th_dddkappa,
-                                             _SPLINE_EST_DERIV_,
-                                             pth->error_message),
-             pth->error_message,
-             pth->error_message);
+  // /** - --> second derivative with respect to tau of dkappa
+  //   (in view of spline interpolation) */
+  // class_call(array_spline_table_line_to_line(tau_table,
+  //                                            pth->tt_size,
+  //                                            pth->thermodynamics_table,
+  //                                            pth->th_size,
+  //                                            pth->index_th_dkappa,
+  //                                            pth->index_th_dddkappa,
+  //                                            _SPLINE_EST_DERIV_,
+  //                                            pth->error_message),
+  //            pth->error_message,
+  //            pth->error_message);
 
-  /** - --> compute -kappa = [int_{tau_today}^{tau} dtau dkappa/dtau],
-    store temporarily in column "g" */
-  class_call(array_integrate_spline_table_line_to_line(tau_table,
-                                                       pth->tt_size,
-                                                       pth->thermodynamics_table,
-                                                       pth->th_size,
-                                                       pth->index_th_dkappa,
-                                                       pth->index_th_dddkappa,
-                                                       pth->index_th_g,
-                                                       pth->error_message),
-             pth->error_message,
-             pth->error_message);
+  // /** - --> compute -kappa = [int_{tau_today}^{tau} dtau dkappa/dtau],
+  //   store temporarily in column "g" */
+  // class_call(array_integrate_spline_table_line_to_line(tau_table,
+  //                                                      pth->tt_size,
+  //                                                      pth->thermodynamics_table,
+  //                                                      pth->th_size,
+  //                                                      pth->index_th_dkappa,
+  //                                                      pth->index_th_dddkappa,
+  //                                                      pth->index_th_g,
+  //                                                      pth->error_message),
+  //            pth->error_message,
+  //            pth->error_message);
 
-  /** - --> compute visibility: \f$ g= (d \kappa/d \tau) e^{- \kappa} \f$ */
-  for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
-    /** - ---> compute g */
-    g = pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
-      exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
+  // /** - --> compute visibility: \f$ g= (d \kappa/d \tau) e^{- \kappa} \f$ */
+  // for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
+  //   /** - ---> compute g */
+  //   g = pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] *
+  //     exp(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]);
 
-    /** - ---> store g */
-    pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
+  //   /** - ---> store g */
+  //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
 
-    /** - ---> compute variation rate */
-    class_test(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] == 0.,
-               pth->error_message,
-               "variation rate diverges");
+  //   /** - ---> compute variation rate */
+  //   class_test(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] == 0.,
+  //              pth->error_message,
+  //              "variation rate diverges");
 
-  }
+  // }
 
-  /** - modifying visibility function */
-  if (pth->visfunc==visfunc_gaussian) {
-      class_call(visibility_gaussian(tau_table, pth,
-                                     pth->error_message),
-                 pth->error_message,
-                 pth->error_message);
-  }
-  else if (pth->visfunc==visfunc_skewnormal) {
-      class_call(visibility_skew_normal(tau_table, pth,
-                                        pth->error_message),
-                 pth->error_message,
-                 pth->error_message);
-  }
+  // * - modifying visibility function 
+  // if (pth->visfunc==visfunc_gaussian) {
+  //     class_call(visibility_gaussian(tau_table, pth,
+  //                                    pth->error_message),
+  //                pth->error_message,
+  //                pth->error_message);
+  // }
+  // else if (pth->visfunc==visfunc_skewnormal) {
+  //     class_call(visibility_skew_normal(tau_table, pth,
+  //                                       pth->error_message),
+  //                pth->error_message,
+  //                pth->error_message);
+  // }
 
-  /** - --> second derivative with respect to tau of g
-    (in view of spline interpolation) */
-  class_call(array_spline_table_line_to_line(tau_table,
-                                             pth->tt_size,
-                                             pth->thermodynamics_table,
-                                             pth->th_size,
-                                             pth->index_th_g,
-                                             pth->index_th_ddg,
-                                             _SPLINE_EST_DERIV_,
-                                             pth->error_message),
-             pth->error_message,
-             pth->error_message);
+  // /** - --> second derivative with respect to tau of g
+  //   (in view of spline interpolation) */
+  // class_call(array_spline_table_line_to_line(tau_table,
+  //                                            pth->tt_size,
+  //                                            pth->thermodynamics_table,
+  //                                            pth->th_size,
+  //                                            pth->index_th_g,
+  //                                            pth->index_th_ddg,
+  //                                            _SPLINE_EST_DERIV_,
+  //                                            pth->error_message),
+  //            pth->error_message,
+  //            pth->error_message);
 
-  /** Reverse engineering g to get dkappa/dtau */ //@nstarman
-  // kappa = -ln(-int_1_tau f(g) dtau )
-  // dkappa/dtau = f(g) / (-int_1_tau{f(g) dtau} + exp{-kappa(tau_0)})
-  // kappa(tau_0) = 0 => exp{-kappa(tau_0)} = 1
-  // store (negative of) integral in column "index_th_G" */
-  class_call(array_integrate_spline_table_line_to_line(tau_table,
-                                                       pth->tt_size,
-                                                       pth->thermodynamics_table,
-                                                       pth->th_size,
-                                                       pth->index_th_g,
-                                                       pth->index_th_ddg,
-                                                       pth->index_th_G,
-                                                       pth->error_message),
-               pth->error_message,
-               pth->error_message);
+  // /** Reverse engineering g to get dkappa/dtau */ //@nstarman
+  // // kappa = -ln(-int_1_tau f(g) dtau )
+  // // dkappa/dtau = f(g) / (-int_1_tau{f(g) dtau} + exp{-kappa(tau_0)})
+  // // kappa(tau_0) = 0 => exp{-kappa(tau_0)} = 1
+  // // store (negative of) integral in column "index_th_G" */
+  // class_call(array_integrate_spline_table_line_to_line(tau_table,
+  //                                                      pth->tt_size,
+  //                                                      pth->thermodynamics_table,
+  //                                                      pth->th_size,
+  //                                                      pth->index_th_g,
+  //                                                      pth->index_th_ddg,
+  //                                                      pth->index_th_G,
+  //                                                      pth->error_message),
+  //              pth->error_message,
+  //              pth->error_message);
 
-  int_g_tot = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_G];  // 1.0
+  // int_g_tot = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_G];  // 1.0
 
-  // getting dkappa/dtau
-  for (index_tau=(pth->tt_size-1); index_tau>=0; index_tau--) {
-    g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+  // // getting dkappa/dtau
+  // for (index_tau=(pth->tt_size-1); index_tau>=0; index_tau--) {
+  //   g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
 
-    Gdiff = fabs(int_g_tot - pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_G]);
+  //   Gdiff = fabs(int_g_tot - pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_G]);
 
-    // FIXME, introduces a discontinuity in the derivative
-    if ((g > 0.1 * 0.02 * ppr->neglect_CMB_sources_below_visibility) && (g > 0.) && (Gdiff > 0.0)) {
-        preco->recombination_table[index_tau*preco->re_size+preco->index_re_dkappadtau] = g / Gdiff;
-    }
+  //   // FIXME, introduces a discontinuity in the derivative
+  //   if ((g > 0.1 * 0.02 * ppr->neglect_CMB_sources_below_visibility) && (g > 0.) && (Gdiff > 0.0)) {
+  //       preco->recombination_table[index_tau*preco->re_size+preco->index_re_dkappadtau] = g / Gdiff;
+  //   }
 
-    // preco->recombination_table[index_tau*pth->th_size+pth->index_th_ddg] = g / Gdiff;
-    // printf("%d %f %f %f %f %f\n", index_tau, tau_table[index_tau], g, Gdiff,
-    //        preco->recombination_table[index_tau*preco->re_size+preco->index_re_dkappadtau],
-    //        preco->recombination_table[index_tau*pth->th_size+pth->index_th_ddg]);
-  }
+  //   // preco->recombination_table[index_tau*pth->th_size+pth->index_th_ddg] = g / Gdiff;
+  //   // printf("%d %f %f %f %f %f\n", index_tau, tau_table[index_tau], g, Gdiff,
+  //   //        preco->recombination_table[index_tau*preco->re_size+preco->index_re_dkappadtau],
+  //   //        preco->recombination_table[index_tau*pth->th_size+pth->index_th_ddg]);
+  // }
 
-  // undoing recombination & reionisation merge
-  free(pth->thermodynamics_table);
-  free(pth->d2thermodynamics_dz2_table);
-  // undoing reionization changes
-  pth->reio_parametrization=reio_param;
+  // // undoing recombination & reionisation merge
+  // free(pth->thermodynamics_table);
+  // free(pth->d2thermodynamics_dz2_table);
+  // // undoing reionization changes
+  // pth->reio_parametrization=reio_param;
 
   return _SUCCESS_;
 }
@@ -2824,42 +2838,84 @@ int visibility_gaussian(double * tau_table,
 
     /** - define local variables */
     int index_tau;
+    double g_0;
     double g;
-    double g_int_norm;
-    double ooa2; // One Over Alpha^2
+    // double g_int_norm;
+    double g_max;
+    double alpha;
 
-    ooa2 = 1. / (pth->alpha_vis * pth->alpha_vis);
+    /** - shortcut to local variables */
+    alpha=pth->alpha_vis;
 
-    /** - calculate CDF of g, store in d_kappa */
-    g_int_norm = integrate_g(tau_table,
-                             pth->tt_size,
-                             pth->thermodynamics_table,
-                             pth->th_size,
-                             pth->index_th_g);
-    // printf("gauss #1 %f\n", g_int_norm);
+    // /** - calculate CDF of g, store in d_kappa */
+    // g_int_norm = integrate_g(tau_table,
+    //                          pth->tt_size,
+    //                          pth->thermodynamics_table,
+    //                          pth->th_size,
+    //                          pth->index_th_g);
+
+    // get to maximmum value
+    index_tau=pth->tt_size-1;
+    while (pth->z_table[index_tau]>_Z_REC_MAX_) {
+      index_tau--;
+    }
+    while (pth->thermodynamics_table[(index_tau+1)*pth->th_size+pth->index_th_g] <
+           pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]) {
+      index_tau--;
+    }
+    g_max=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+    // index_tau_g_max=index_tau;
 
     /** - modify g */
     for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
         // get g
-        g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+        g_0=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
         // modify g
-        g = pow(g, ooa2);
+        g = (g_max / alpha) * pow(g_0 / g_max, 1. / (alpha * alpha));
+
+        // NOTE can't modify exp(-kappa) b/c haven't modified kappa
+
+        /** - ---> compute g'*/
+        // df(g_0)/dx = f'(g_0) g_0'
+        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg] =
+          ((1. / alpha) * pow(g_0 / g_max, 1. / (alpha * alpha) - 1.) *
+            pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg]);
+
+        /** - ---> compute g''*/
+        // d^2f(g_0)/dx^2 = f'(g_0) g_0'' + f''(g_0) g_0'
+        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg] =
+          (((1. / alpha) * pow(g_0 / g_max, 1. / (alpha * alpha) - 1.) *
+            pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddg]) +
+           ((1. / alpha / g_max) * pow(g_0 / g_max, 1. / (alpha * alpha) - 2.) *
+            pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dg]));
+
         /** - ---> store g */
         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
+
+        /** - ---> compute variation rate */
+        class_test(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] == 0.,
+                   pth->error_message,
+                   "variation rate diverges");
+
+        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate] =
+          sqrt( pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
+               +pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa]/
+                    pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
+               +fabs(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa]/
+                     pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]));
     }
 
-    /** - normalize modification (int_g_0 / int_g) */
-    g_int_norm /= integrate_g(tau_table,
-                                     pth->tt_size,
-                                     pth->thermodynamics_table,
-                                     pth->th_size,
-                                     pth->index_th_g);
-    // printf("gauss #2 %f\n", g_int_norm);
+    // /** - normalize modification (int_g_0 / int_g) */
+    // g_int_norm /= integrate_g(tau_table,
+    //                                  pth->tt_size,
+    //                                  pth->thermodynamics_table,
+    //                                  pth->th_size,
+    //                                  pth->index_th_g);
 
-    for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
-      g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
-      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]=g_int_norm*g;
-    }
+    // for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
+    //   g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+    //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]=g_int_norm*g;
+    // }
 
     return _SUCCESS_;
 }
@@ -2946,9 +3002,7 @@ int visibility_skew_normal(double * tau_table,
                pth->error_message,
                pth->error_message);
 
-    g_int_norm = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_G];  // 1.0
     // g_int_norm = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_G];  // 1.0
-    // printf("#1 %f\n", g_int_norm);
 
     /** - sample */
     x=visfunc_sample(tau_table,
@@ -3006,25 +3060,46 @@ int visibility_skew_normal(double * tau_table,
         // ignoring constants since normalized away
         g = pow(g_0, ooa2) * (erfcS / pow(erfcS0, ooa2));
 
+        // NOTE can't modify exp(-kappa) b/c haven't modified kappa
+
+        // TODO
+        /** - ---> compute g'*/
+        // df(g_0)/dx = f'(g_0) g_0'
+
+        /** - ---> compute g''*/
+        // d^2f(g_0)/dx^2 = f'(g_0) g_0'' + f''(g_0) g_0'
+
         /** - ---> store g */
         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
+
+        /** - ---> compute variation rate */
+        class_test(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa] == 0.,
+                   pth->error_message,
+                   "variation rate diverges");
+
+        pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_rate] =
+          sqrt( pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
+               +pow(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_ddkappa]/
+                    pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa],2)
+               +fabs(pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dddkappa]/
+                     pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_dkappa]));
       }
 
     }
 
-    // normalizing the integral
-    // g = (int_g_0 / int_g) * g
-    g_int_norm /= integrate_g(tau_table,
-                                     pth->tt_size,
-                                     pth->thermodynamics_table,
-                                     pth->th_size,
-                                     pth->index_th_g);
-    // printf("#2 %f %f %f \n", g_int_norm, alpha, beta);
+    // // normalizing the integral
+    // // g = (int_g_0 / int_g) * g
+    // g_int_norm /= integrate_g(tau_table,
+    //                                  pth->tt_size,
+    //                                  pth->thermodynamics_table,
+    //                                  pth->th_size,
+    //                                  pth->index_th_g);
+    // // printf("#2 %f %f %f \n", g_int_norm, alpha, beta);
 
-    for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
-      g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
-      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]=g_int_norm*g;
-    }
+    // for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
+    //   g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+    //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]=g_int_norm*g;
+    // }
 
     // cleanup
     free(x);
