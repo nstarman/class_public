@@ -2823,41 +2823,53 @@ int visibility_gaussian(double * tau_table,
     /** - define local variables */
     int index_tau;
     double g;
-    double g_int_norm;
-    double ooa2; // One Over Alpha^2
+    // double g_int_norm;
+    double g_max;
+    double alpha;
 
-    ooa2 = 1. / (pth->alpha_vis * pth->alpha_vis);
+    /** - shortcut to local variables */
+    alpha=pth->alpha_vis;
 
-    /** - calculate CDF of g, store in d_kappa */
-    g_int_norm = integrate_g(tau_table,
-                             pth->tt_size,
-                             pth->thermodynamics_table,
-                             pth->th_size,
-                             pth->index_th_g);
-    // printf("gauss #1 %f\n", g_int_norm);
+    // /** - calculate CDF of g, store in d_kappa */
+    // g_int_norm = integrate_g(tau_table,
+    //                          pth->tt_size,
+    //                          pth->thermodynamics_table,
+    //                          pth->th_size,
+    //                          pth->index_th_g);
+
+    // get to maximmum value
+    index_tau=pth->tt_size-1;
+    while (pth->z_table[index_tau]>_Z_REC_MAX_) {
+      index_tau--;
+    }
+    while (pth->thermodynamics_table[(index_tau+1)*pth->th_size+pth->index_th_g] <
+           pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]) {
+      index_tau--;
+    }
+    g_max=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+    // index_tau_g_max=index_tau;
 
     /** - modify g */
     for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
         // get g
         g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
         // modify g
-        g = pow(g, ooa2);
+        g = (g_max / alpha) * pow(g / g_max, 1. / (alpha * alpha));
         /** - ---> store g */
         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
     }
 
-    /** - normalize modification (int_g_0 / int_g) */
-    g_int_norm /= integrate_g(tau_table,
-                                     pth->tt_size,
-                                     pth->thermodynamics_table,
-                                     pth->th_size,
-                                     pth->index_th_g);
-    // printf("gauss #2 %f\n", g_int_norm);
+    // /** - normalize modification (int_g_0 / int_g) */
+    // g_int_norm /= integrate_g(tau_table,
+    //                                  pth->tt_size,
+    //                                  pth->thermodynamics_table,
+    //                                  pth->th_size,
+    //                                  pth->index_th_g);
 
-    for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
-      g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
-      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]=g_int_norm*g;
-    }
+    // for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
+    //   g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+    //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]=g_int_norm*g;
+    // }
 
     return _SUCCESS_;
 }
@@ -2907,8 +2919,9 @@ int visibility_skew_normal(double * tau_table,
     double mos, mobs;    // mode movement b/c skewness
     // visfunc calculation 
     double g;
-    double g_0; // TODO delete
-    double g_int_norm;
+    double g_0;
+    double g_max;
+    // double g_int_norm;
     double erfcS0, erfcS;
 
     /** - set values */
@@ -2930,7 +2943,7 @@ int visibility_skew_normal(double * tau_table,
            pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]) {
       index_tau--;
     }
-
+    g_max=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
     etas = tau_table[index_tau];
 
     /** - calculate CDF, store in index_th_Tb */
@@ -2944,9 +2957,7 @@ int visibility_skew_normal(double * tau_table,
                pth->error_message,
                pth->error_message);
 
-    g_int_norm = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_Tb];  // 1.0
     // g_int_norm = pth->thermodynamics_table[(pth->tt_size-1)*pth->th_size+pth->index_th_Tb];  // 1.0
-    // printf("#1 %f\n", g_int_norm);
 
     /** - sample */
     x=visfunc_sample(tau_table,
@@ -2956,8 +2967,6 @@ int visibility_skew_normal(double * tau_table,
                      pth->index_th_Tb,
                      ptvs,        // pointer to tau_vis_size
                      0.0, 500.0); // tau sample region
-
-    // printf("tau_vis_size %d\n", pth->tau_vis_size);
 
     avg   = visfunc_avg(x, pth->tau_vis_size);
     sigma = visfunc_sigma(x, avg, pth->tau_vis_size);
@@ -2988,8 +2997,6 @@ int visibility_skew_normal(double * tau_table,
     mos  = visfunc_mode(S0);
     mobs = visfunc_mode(pth->beta_vis * S);
 
-    // printf("%f %f %f %f %f %f %f %f %f\n", alpha, beta, sigma, mos, mobs, etas, S0, S, (1 + erf(S0)));
-    // printf("%f %f\n", sigma * mos, alpha * sigma * mobs);
 
     // modifying visibility functiong
     for (index_tau=0; index_tau<=pth->tt_size-1; index_tau++) {
@@ -3000,9 +3007,8 @@ int visibility_skew_normal(double * tau_table,
       // erfcS  = (1 + erf(((beta * S ) / (sqrt(2) * alpha*sigma)) * (tau_table[index_tau] +       sigma*mos  - etas)));
       erfcS  = (1 + erf(((beta * S ) / (sqrt(2) * alpha*sigma)) * (tau_table[index_tau] + alpha*sigma*mobs - etas)));
 
-      if ((erfcS0 > 0.)) {
-        // ignoring constants since normalized away
-        g = pow(g_0, ooa2) * (erfcS / pow(erfcS0, ooa2));
+      if ((erfcS0 > 0.)) { // denominator cannot be 0
+        g = (1 / alpha) * pow(g_max / (sqrt(2 * _PI_ * sigma)), ooa2) * pow(g_0, ooa2) * (erfcS / pow(erfcS0, ooa2));
 
         /** - ---> store g */
         pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g] = g;
@@ -3010,23 +3016,19 @@ int visibility_skew_normal(double * tau_table,
 
     }
 
-    // normalizing the integral
-    // g = (int_g_0 / int_g) * g
-    g_int_norm /= integrate_g(tau_table,
-                                     pth->tt_size,
-                                     pth->thermodynamics_table,
-                                     pth->th_size,
-                                     pth->index_th_g);
-    // printf("#2 %f %f %f \n", g_int_norm, alpha, beta);
+    // // normalizing the integral
+    // // g = (int_g_0 / int_g) * g
+    // g_int_norm /= integrate_g(tau_table, pth->tt_size,
+    //                           pth->thermodynamics_table, pth->th_size,
+    //                           pth->index_th_g);
 
-    for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
-      g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
-      pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]=g_int_norm*g;
-    }
+    // for (index_tau=pth->tt_size-1; index_tau>=0; index_tau--) {
+    //   g=pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g];
+    //   pth->thermodynamics_table[index_tau*pth->th_size+pth->index_th_g]=g_int_norm*g;
+    // }
 
     // cleanup
     free(x);
-    // free(xx);
 
     return _SUCCESS_;
 }
